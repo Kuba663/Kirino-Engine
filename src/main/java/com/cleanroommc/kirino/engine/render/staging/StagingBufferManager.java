@@ -12,7 +12,6 @@ import com.cleanroommc.kirino.gl.vao.attribute.AttributeLayout;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Triple;
-import org.jspecify.annotations.NonNull;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 
@@ -24,6 +23,14 @@ import java.util.List;
 import java.util.Map;
 
 public class StagingBufferManager {
+    static final MethodHandle VAO_GETTER;
+
+    static {
+        VAO_GETTER = ReflectionUtils.getFieldGetter(TemporaryVAOHandle.class, "vao", VAO.class);
+
+        Preconditions.checkNotNull(VAO_GETTER);
+    }
+
     // todo: ring buffer double/triple/n buffering & non-coherent persistent buffer with manual flush
     private final Map<String, Triple<Integer, VBOView, ByteBuffer>> persistentVbos = new HashMap<>();
     private final Map<String, Triple<Integer, EBOView, ByteBuffer>> persistentEbos = new HashMap<>();
@@ -35,18 +42,6 @@ public class StagingBufferManager {
 
     public long getTemporaryHandleGeneration() {
         return temporaryHandleGeneration;
-    }
-
-    /**
-     * Internal use only! Direct getter of {@link TemporaryVAOHandle#vao}.
-     */
-    private static final @NonNull MethodHandle TEMPORARY_VAO_HANDLE_VAO_GETTER;
-
-    static {
-        MethodHandle vao = ReflectionUtils.getFieldGetter(TemporaryVAOHandle.class, "vao", VAO.class);
-        Preconditions.checkNotNull(vao);
-
-        TEMPORARY_VAO_HANDLE_VAO_GETTER = vao;
     }
 
     //<editor-fold desc="staging">
@@ -147,12 +142,19 @@ public class StagingBufferManager {
         }
 
         TemporaryVAOHandle vaoHandle = new TemporaryVAOHandle(this, temporaryHandleGeneration, attributeLayout, eboHandle, vboHandles);
+        temporaryVaos.add(getVAO(vaoHandle));
+        return vaoHandle;
+    }
+
+    /**
+     * @see TemporaryVAOHandle#vao
+     */
+    private static VAO getVAO(TemporaryVAOHandle instance) {
         try {
-            temporaryVaos.add((VAO) TEMPORARY_VAO_HANDLE_VAO_GETTER.invokeExact(vaoHandle));
+            return (VAO) VAO_GETTER.invokeExact(instance);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
-        return vaoHandle;
     }
 
     protected TemporaryVBOHandle getTemporaryVBOHandle(int size) {

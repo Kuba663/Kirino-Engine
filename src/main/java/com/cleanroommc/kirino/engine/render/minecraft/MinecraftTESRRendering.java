@@ -22,13 +22,10 @@ import java.util.Map;
 
 public class MinecraftTESRRendering {
     private final MinecraftCulling cullingPatch;
-    private final MethodHandle damagedBlocks;
 
     public MinecraftTESRRendering(MinecraftCulling cullingPatch) {
         this.cullingPatch = cullingPatch;
-        damagedBlocks = ReflectionUtils.getFieldGetter(RenderGlobal.class, "damagedBlocks", "field_72738_E", Map.class);
-
-        Preconditions.checkNotNull(damagedBlocks);
+        MethodHolder.init();
     }
 
     private int renderEntitiesStartupCounter = 2;
@@ -103,36 +100,57 @@ public class MinecraftTESRRendering {
 
         preRenderDamagedBlocks();
 
-        try {
-            //noinspection unchecked
-            for (DestroyBlockProgress destroyBlockProgress : ((Map<Integer, DestroyBlockProgress>) damagedBlocks.invokeExact(renderGlobal)).values()) {
-                BlockPos blockPos = destroyBlockProgress.getPosition();
+        for (DestroyBlockProgress destroyBlockProgress : MethodHolder.getDamagedBlocks(renderGlobal).values()) {
+            BlockPos blockPos = destroyBlockProgress.getPosition();
 
-                if (world.getBlockState(blockPos).getBlock().hasTileEntity()) {
-                    TileEntity tileEntity = world.getTileEntity(blockPos);
+            if (world.getBlockState(blockPos).getBlock().hasTileEntity()) {
+                TileEntity tileEntity = world.getTileEntity(blockPos);
 
-                    if (tileEntity instanceof TileEntityChest chest) {
-                        if (chest.adjacentChestXNeg != null) {
-                            blockPos = blockPos.offset(EnumFacing.WEST);
-                            tileEntity = world.getTileEntity(blockPos);
-                        } else if (chest.adjacentChestZNeg != null) {
-                            blockPos = blockPos.offset(EnumFacing.NORTH);
-                            tileEntity = world.getTileEntity(blockPos);
-                        }
-                    }
-
-                    IBlockState blockState = world.getBlockState(blockPos);
-
-                    if (tileEntity != null && blockState.hasCustomBreakingProgress()) {
-                        TileEntityRendererDispatcher.instance.render(tileEntity, partialTicks, destroyBlockProgress.getPartialBlockDamage());
+                if (tileEntity instanceof TileEntityChest chest) {
+                    if (chest.adjacentChestXNeg != null) {
+                        blockPos = blockPos.offset(EnumFacing.WEST);
+                        tileEntity = world.getTileEntity(blockPos);
+                    } else if (chest.adjacentChestZNeg != null) {
+                        blockPos = blockPos.offset(EnumFacing.NORTH);
+                        tileEntity = world.getTileEntity(blockPos);
                     }
                 }
+
+                IBlockState blockState = world.getBlockState(blockPos);
+
+                if (tileEntity != null && blockState.hasCustomBreakingProgress()) {
+                    TileEntityRendererDispatcher.instance.render(tileEntity, partialTicks, destroyBlockProgress.getPartialBlockDamage());
+                }
             }
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
         }
 
         postRenderDamagedBlocks();
         entityRenderer.disableLightmap();
+    }
+
+    private static class MethodHolder {
+        static final MethodHandle DAMAGED_BLOCKS_GETTER;
+
+        static {
+            DAMAGED_BLOCKS_GETTER = ReflectionUtils.getFieldGetter(RenderGlobal.class, "damagedBlocks", "field_72738_E", Map.class);
+
+            Preconditions.checkNotNull(DAMAGED_BLOCKS_GETTER);
+        }
+
+        static void init() {
+            // NO-OP
+        }
+
+        /**
+         * @see RenderGlobal#damagedBlocks
+         */
+        @SuppressWarnings("unchecked")
+        static Map<Integer, DestroyBlockProgress> getDamagedBlocks(RenderGlobal instance) {
+            try {
+                return (Map<Integer, DestroyBlockProgress>) DAMAGED_BLOCKS_GETTER.invokeExact(instance);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

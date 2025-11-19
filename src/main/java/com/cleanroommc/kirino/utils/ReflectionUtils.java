@@ -16,10 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * A set of utility functions to get a {@link MethodHandle} for methods/fields/constructors.
@@ -27,10 +23,11 @@ import java.util.function.Supplier;
  * Whenever possible, cache the results in a {@code static final} field. Another way to cache it is to store them in a {@code record}
  * and store that reference in a {@code static final} field.
  *
- * @see <a href="https://jornvernee.github.io/methodhandles/2024/01/19/methodhandle-primer.html#method-handle-inlining">for more details about caching/inlining</a>
+ * @see com.cleanroommc.kirino.KirinoCore.MethodHolder An example of inlinable cached handles
+ * @see <a href="https://jornvernee.github.io/methodhandles/2024/01/19/methodhandle-primer.html#method-handle-inlining">For more details about caching/inlining</a>
  */
 public final class ReflectionUtils {
-    public static final boolean isDeobf = FMLLaunchHandler.isDeobfuscatedEnvironment();
+    private static final boolean isDeobf = FMLLaunchHandler.isDeobfuscatedEnvironment();
     // Consider using ImagineBreaker if this lookup isn't privileged enough
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
@@ -156,92 +153,6 @@ public final class ReflectionUtils {
     @Nullable
     public static Field findField(Class<?> clazz, String fieldName) {
        return findField(clazz, fieldName, null);
-    }
-    //</editor-fold>
-
-    //<editor-fold desc="unreflect">
-    private static Object unreflectGetter(Field field) {
-        if (field.getType().isPrimitive()) {
-            return unreflectGetterHelper(field, TypeUtils.toWrappedPrimitive(field.getType()), field.getDeclaringClass());
-        } else {
-            return unreflectGetterHelper(field, field.getType(), field.getDeclaringClass());
-        }
-    }
-
-    @SuppressWarnings("all")
-    @Nullable
-    private static <TReturn, TOwner> Object unreflectGetterHelper(Field field, Class<TReturn> clazz1, Class<TOwner> clazz2) {
-        field.setAccessible(true);
-        Object getter = null;
-        try {
-            MethodHandle handle = LOOKUP.unreflectGetter(field);
-            if (Modifier.isStatic(field.getModifiers())) {
-                getter = new Supplier<TReturn>() {
-                    @Override
-                    public TReturn get() {
-                        try {
-                            return (TReturn) handle.invoke();
-                        } catch (Throwable e) {
-                            return null;
-                        }
-                    }
-                };
-            } else {
-                getter = new Function<TOwner, TReturn>() {
-                    @Override
-                    public TReturn apply(TOwner tOwner) {
-                        try {
-                            return (TReturn) handle.invoke(tOwner);
-                        } catch (Throwable e) {
-                            return null;
-                        }
-                    }
-                };
-            }
-        } catch (Exception ignored) {
-        }
-        return getter;
-    }
-
-    private static Object unreflectSetter(Field field) {
-        if (field.getType().isPrimitive()) {
-            return unreflectSetterHelper(field, TypeUtils.toWrappedPrimitive(field.getType()), field.getDeclaringClass());
-        } else {
-            return unreflectSetterHelper(field, field.getType(), field.getDeclaringClass());
-        }
-    }
-
-    @SuppressWarnings("all")
-    @Nullable
-    private static <TField, TOwner> Object unreflectSetterHelper(Field field, Class<TField> clazz1, Class<TOwner> clazz2) {
-        field.setAccessible(true);
-        Object setter = null;
-        try {
-            MethodHandle handle = LOOKUP.unreflectSetter(field);
-            if (Modifier.isStatic(field.getModifiers())) {
-                setter = new Consumer<TField>() {
-                    @Override
-                    public void accept(TField tField) {
-                        try {
-                            handle.invoke(tField);
-                        } catch (Throwable e) {
-                        }
-                    }
-                };
-            } else {
-                setter = new BiConsumer<TOwner, TField>() {
-                    @Override
-                    public void accept(TOwner tOwner, TField tField) {
-                        try {
-                            handle.invoke(tOwner, tField);
-                        } catch (Throwable e) {
-                        }
-                    }
-                };
-            }
-        } catch (Exception ignored) {
-        }
-        return setter;
     }
     //</editor-fold>
 
@@ -493,7 +404,7 @@ public final class ReflectionUtils {
         Preconditions.checkState(lookupResult.isPresent());
 
         MethodHandles.Lookup lookup = lookupResult.get();
-        MethodHandle handle = null;
+        MethodHandle handle;
         try {
             handle = lookup.findConstructor(clazz, MethodType.methodType(void.class, params));
         } catch (NoSuchMethodException | IllegalAccessException e) {
