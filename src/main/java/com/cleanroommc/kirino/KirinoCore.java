@@ -434,7 +434,12 @@ public final class KirinoCore {
 
     @SuppressWarnings("unchecked")
     public static void init() {
-        //<editor-fold desc="early escape">
+        if (!KIRINO_CONFIG.enable) {
+            KIRINO_CONFIG.enableRenderDelegate = false;
+            return;
+        }
+
+        //<editor-fold desc="gl version check">
         String rawGLVersion = GL11.glGetString(GL11.GL_VERSION);
         int majorGLVersion = -1;
         int minorGLVersion = -1;
@@ -456,12 +461,16 @@ public final class KirinoCore {
 
         if (rawGLVersion.isEmpty() || majorGLVersion == -1 || minorGLVersion == -1) {
             UNSUPPORTED = true;
-            LOGGER.warn("Failed to parse OpenGL version. Aborting Kirino initialization.");
+            KIRINO_CONFIG.enable = false;
+            KIRINO_CONFIG.enableRenderDelegate = false;
+            LOGGER.warn("Failed to parse the OpenGL version. Aborting Kirino initialization.");
             return;
         }
 
         if (!(majorGLVersion == 4 && minorGLVersion == 6)) {
             UNSUPPORTED = true;
+            KIRINO_CONFIG.enable = false;
+            KIRINO_CONFIG.enableRenderDelegate = false;
             LOGGER.warn("OpenGL 4.6 not supported. Aborting Kirino initialization.");
             return;
         }
@@ -573,6 +582,10 @@ public final class KirinoCore {
     }
 
     public static void postInit() {
+        if (!KIRINO_CONFIG.enable) {
+            return;
+        }
+
         //<editor-fold desc="kirino engine">
         LOGGER.info("---------------");
         LOGGER.info("Post-Initializing Kirino Engine.");
