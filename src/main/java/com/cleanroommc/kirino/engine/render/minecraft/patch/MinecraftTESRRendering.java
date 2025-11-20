@@ -17,19 +17,14 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 
+import java.lang.invoke.MethodHandle;
 import java.util.Map;
-import java.util.function.Function;
 
 public class MinecraftTESRRendering {
     private final MinecraftCulling cullingPatch;
-    private final Function<RenderGlobal, Map<Integer, DestroyBlockProgress>> damagedBlocks;
 
-    @SuppressWarnings("unchecked")
     public MinecraftTESRRendering(MinecraftCulling cullingPatch) {
         this.cullingPatch = cullingPatch;
-        damagedBlocks = (Function<RenderGlobal, Map<Integer, DestroyBlockProgress>>) ReflectionUtils.getDeclaredFieldGetter(RenderGlobal.class, "damagedBlocks", "field_72738_E");
-
-        Preconditions.checkNotNull(damagedBlocks);
     }
 
     private int renderEntitiesStartupCounter = 2;
@@ -104,7 +99,7 @@ public class MinecraftTESRRendering {
 
         preRenderDamagedBlocks();
 
-        for (DestroyBlockProgress destroyBlockProgress : damagedBlocks.apply(renderGlobal).values()) {
+        for (DestroyBlockProgress destroyBlockProgress : MethodHolder.getDamagedBlocks(renderGlobal).values()) {
             BlockPos blockPos = destroyBlockProgress.getPosition();
 
             if (world.getBlockState(blockPos).getBlock().hasTileEntity()) {
@@ -130,5 +125,27 @@ public class MinecraftTESRRendering {
 
         postRenderDamagedBlocks();
         entityRenderer.disableLightmap();
+    }
+
+    private static class MethodHolder {
+        static final MethodHandle DAMAGED_BLOCKS_GETTER;
+
+        static {
+            DAMAGED_BLOCKS_GETTER = ReflectionUtils.getFieldGetter(RenderGlobal.class, "damagedBlocks", "field_72738_E", Map.class);
+
+            Preconditions.checkNotNull(DAMAGED_BLOCKS_GETTER);
+        }
+
+        /**
+         * @see RenderGlobal#damagedBlocks
+         */
+        @SuppressWarnings("unchecked")
+        static Map<Integer, DestroyBlockProgress> getDamagedBlocks(RenderGlobal instance) {
+            try {
+                return (Map<Integer, DestroyBlockProgress>) DAMAGED_BLOCKS_GETTER.invokeExact(instance);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

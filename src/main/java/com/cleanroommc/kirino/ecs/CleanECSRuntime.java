@@ -22,11 +22,13 @@ import com.cleanroommc.kirino.ecs.job.JobRegistry;
 import com.cleanroommc.kirino.ecs.job.JobScheduler;
 import com.cleanroommc.kirino.ecs.job.event.JobRegistrationEvent;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
 import org.apache.logging.log4j.Logger;
 import org.joml.*;
 
+import java.lang.invoke.MethodHandle;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +40,7 @@ public class CleanECSRuntime {
     public final JobRegistry jobRegistry;
     public final JobScheduler jobScheduler;
 
-    @SuppressWarnings({"DataFlowIssue", "unchecked"})
+    @SuppressWarnings({"DataFlowIssue"})
     private CleanECSRuntime(EventBus eventBus, Logger logger) {
         structRegistry = new StructRegistry();
         fieldRegistry = new FieldRegistry(structRegistry);
@@ -131,7 +133,8 @@ public class CleanECSRuntime {
 
         JobRegistrationEvent jobRegistrationEvent = new JobRegistrationEvent();
         eventBus.post(jobRegistrationEvent);
-        for (Class<? extends IParallelJob> clazz : (List<Class<? extends IParallelJob>>) ReflectionUtils.getFieldValue(ReflectionUtils.findDeclaredField(JobRegistrationEvent.class, "parallelJobClasses"), jobRegistrationEvent)) {
+        List<Class<? extends IParallelJob>> parallelJobs = getParallelJobs(jobRegistrationEvent);
+        for (Class<? extends IParallelJob> clazz : parallelJobs) {
             jobRegistry.registerParallelJob(clazz);
             logger.info("Parallel job " + clazz.getName() + " registered. Data queries are as follows:" +
                     (jobRegistry.getParallelJobDataQueries(clazz).keySet().isEmpty() && jobRegistry.getParallelJobExternalDataQueries(clazz).keySet().isEmpty() ? " (Empty)" : ""));
@@ -142,5 +145,19 @@ public class CleanECSRuntime {
                 logger.info("  - External query: " +  fieldName);
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Class<? extends IParallelJob>> getParallelJobs(JobRegistrationEvent jobRegistrationEvent) {
+        MethodHandle parallelJobClassesGetter = ReflectionUtils.getFieldGetter(JobRegistrationEvent.class, "parallelJobClasses", List.class);
+        Preconditions.checkNotNull(parallelJobClassesGetter);
+
+        List<Class<? extends IParallelJob>> parallelJobs;
+        try {
+            parallelJobs = (List<Class<? extends IParallelJob>>) parallelJobClassesGetter.invokeExact(jobRegistrationEvent);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+        return parallelJobs;
     }
 }
