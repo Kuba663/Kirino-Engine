@@ -2,26 +2,25 @@ package com.cleanroommc.kirino.engine.render.staging;
 
 import com.cleanroommc.kirino.engine.render.staging.handle.*;
 import com.cleanroommc.kirino.gl.GLResourceManager;
-import com.cleanroommc.kirino.gl.buffer.view.EBOView;
 import com.cleanroommc.kirino.gl.buffer.GLBuffer;
-import com.cleanroommc.kirino.gl.buffer.view.VBOView;
 import com.cleanroommc.kirino.gl.buffer.meta.BufferUploadHint;
 import com.cleanroommc.kirino.gl.buffer.meta.MapBufferAccessBit;
+import com.cleanroommc.kirino.gl.buffer.view.EBOView;
+import com.cleanroommc.kirino.gl.buffer.view.VBOView;
 import com.cleanroommc.kirino.gl.vao.VAO;
 import com.cleanroommc.kirino.gl.vao.attribute.AttributeLayout;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.tuple.Triple;
-import org.jspecify.annotations.NonNull;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 
+import java.lang.invoke.MethodHandle;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public class StagingBufferManager {
     // todo: ring buffer double/triple/n buffering & non-coherent persistent buffer with manual flush
@@ -35,15 +34,6 @@ public class StagingBufferManager {
 
     public long getTemporaryHandleGeneration() {
         return temporaryHandleGeneration;
-    }
-
-    /**
-     * Internal use only! Direct getter of {@link TemporaryVAOHandle#vao}.
-     */
-    private static final @NonNull Function<TemporaryVAOHandle, VAO> TEMPORARY_VAO_HANDLE_VAO_GETTER;
-
-    static {
-        TEMPORARY_VAO_HANDLE_VAO_GETTER = (Function<TemporaryVAOHandle, VAO>) ReflectionUtils.getDeclaredFieldGetter(TemporaryVAOHandle.class, "vao");
     }
 
     //<editor-fold desc="staging">
@@ -144,7 +134,7 @@ public class StagingBufferManager {
         }
 
         TemporaryVAOHandle vaoHandle = new TemporaryVAOHandle(this, temporaryHandleGeneration, attributeLayout, eboHandle, vboHandles);
-        temporaryVaos.add(TEMPORARY_VAO_HANDLE_VAO_GETTER.apply(vaoHandle));
+        temporaryVaos.add(MethodHolder.getVAO(vaoHandle));
         return vaoHandle;
     }
 
@@ -172,5 +162,26 @@ public class StagingBufferManager {
         eboView.bind(0);
         temporaryEbos.add(eboView);
         return new TemporaryEBOHandle(this, temporaryHandleGeneration, size, eboView);
+    }
+
+    private static class MethodHolder {
+        static final MethodHandle VAO_GETTER;
+
+        static {
+            VAO_GETTER = ReflectionUtils.getFieldGetter(TemporaryVAOHandle.class, "vao", VAO.class);
+
+            Preconditions.checkNotNull(VAO_GETTER);
+        }
+
+        /**
+         * @see TemporaryVAOHandle#vao
+         */
+        static VAO getVAO(TemporaryVAOHandle instance) {
+            try {
+                return (VAO) VAO_GETTER.invokeExact(instance);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
