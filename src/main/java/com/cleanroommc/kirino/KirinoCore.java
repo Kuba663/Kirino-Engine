@@ -55,6 +55,7 @@ public final class KirinoCore {
         return KIRINO_CONFIG.enableRenderDelegate && !UNSUPPORTED;
     }
 
+    //<editor-fold desc="hooks">
     /**
      * Block update hook.
      *
@@ -96,6 +97,7 @@ public final class KirinoCore {
 
         KIRINO_ENGINE.renderingCoordinator.scene.notifyLightUpdate(x, y, z);
     }
+    //</editor-fold>
 
     /**
      * This method is a direct replacement of {@link net.minecraft.client.renderer.EntityRenderer#renderWorld(float, long)}.
@@ -555,6 +557,7 @@ public final class KirinoCore {
 //                DefaultPostProcessingPass::new);
     }
 
+    //<editor-fold desc="reflection">
     /**
      * Holder class to initialize-on-demand necessary method handles.
      */
@@ -745,4 +748,5 @@ public final class KirinoCore {
                 MethodHandle isRenderHand) {
         }
     }
+    //</editor-fold>
 }

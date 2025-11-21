@@ -1,30 +1,39 @@
 # Contributing to Kirino Rendering
 
-Kirino Engine is an ECS-based Rendering (general purpose) Engine ([See proposal](https://github.com/CleanroomMC/Cleanroom/discussions/405)/[See engine overview](https://github.com/CleanroomMC/Kirino-Engine/blob/main/ENGINE_OVERVIEW.md)).<br>
+Kirino Engine is an ECS-based Rendering (general purpose) Engine ([Proposal](https://github.com/CleanroomMC/Cleanroom/discussions/405) (a bit outdated) / [Engine Overview](https://github.com/CleanroomMC/Kirino-Engine/blob/main/ENGINE_OVERVIEW.md) / [Project Board](https://github.com/orgs/CleanroomMC/projects/13)).<br>
 Thanks for your interest! We welcome **all kinds of contributions** – code, documentation, bug reports, and ideas.
 
 ***
 
 ## Getting Started
 
-- Fork the repo (branch: `proposal/render-system`) and clone it locally.
+- Fork the repo (branch: `main`).
+- Clone [Cleanroom](https://github.com/CleanroomMC/Cleanroom) (branch: `kirino`) locally.
+- Go to `.gitmodules`
+  ```
+  [submodule "projects/kirino"]
+    path = projects/kirino
+    url = https://github.com/CleanroomMC/Kirino-Engine.git
+  ```
+- Set the `url` to your fork.
 - `./gradlew cleanroomClient` to run the project.
 - `./gradlew build` to build the project.
-- `./gradlew genPatches` to generate patches if you modified Minecraft source code. 
-- Experimental: `./gradlew cleanroomClientRenderDoc` / `./gradlew cleanroomClientNsight` (check out `build.gradle`)
+- `./gradlew genPatches` to generate patches if you modified Minecraft source code.
 - `Cleanroom/projects/cleanroom/src/main/java/` is where you modify Minecraft source code.
-- `Cleanroom/src/main/java/com/cleanroom/kirino/` is where you contribute to Kirino Engine.
+- `Cleanroom/projects/kirino/src/main/java/` is where you modify your kirino fork.
 
 ## Ways to Contribute
 
 - Report bugs via [Issue](https://github.com/CleanroomMC/Kirino-Engine/issues)
 - Improve / add more java docs (typos, explanations, tutorials).
-- Add unit tests / coverage tests (`Cleanroom/src/test/java/com/cleanroom/test/kirino/`).
-- Implement features. (Check Upcoming Features / Future Features / Propose your own). Contact me, tttsaurus, if you want to implement something but find it confusing.
+- Add unit tests / coverage tests (`Cleanroom/projects/kirino/src/test/java/`).
+- Implement features. (Check [Project Board](https://github.com/orgs/CleanroomMC/projects/13) / Propose your own). Contact me, tttsaurus, if you want to implement something but find it confusing.
 - Propose features you want to have / implement via a PR.
 - Propose general ideas about Kirino Engine via [Proposal](https://github.com/CleanroomMC/Cleanroom/discussions/405).
 
 ## Code Style Convention
+
+### General
 
 - Use `camelCase` for methods / fields.
 - Use K&R brace styling
@@ -59,28 +68,14 @@ Thanks for your interest! We welcome **all kinds of contributions** – code, do
   }
   ```
 - Keep lines reasonably short to maintain readability, but there is no explicit char count limit.
-- Use `Jspecify` for `nullable`/`nonnull` annotations; Use `nullable`/`nonnull` on public APIs and where you think necessary.
 - Don't use `this.` if not necessary.
-- Use google `Preconditions` to check argument/state/nonnull preconditions instead of `Objects.requireNonNull()` or manual if-statement etc.
-- Use `Preconditions` to check `nonnull` even after the `nonnull` annotations.
-  
-  **Example:**
-  ```java
-  @Override
-  public IBuilder<S, I> setEntryCallback(@NonNull S state, @Nullable OnEnterStateCallback<S, I> callback) {
-      Preconditions.checkNotNull(state, "Provided \"state\" can't be null.");
-  
-      ...
-  }
-  ```
-- Add blank line after precondition checks / chunks of code / early escape.
-- Start a setence/phrase with a capital letter in javadoc.
+- Add a blank line after precondition checks / early escape / chunks of code.
+- Start a setence / phrase with a capital letter in javadoc.
 - Line-comments begin with a lowercase letter.
 - Add space after line-comment (`//`).
 - All error messages end with a period (`.`).
 - Use `\" \"` to quote parameters in error messages.
 - Add a single space after each comma in a list of items, parameters, or arguments.
-- Avoid returning null and use `Optional<T>` instead.
 - Add a single space everywhere if possible.
 
   **Bad:**
@@ -97,15 +92,32 @@ Thanks for your interest! We welcome **all kinds of contributions** – code, do
   ```
 - Use `//<editor-fold desc="your desc">` & `//</editor-fold>` if necessary.
 
-#### Best Practices for Reflection
+### Advanced
+
+- Use `Jspecify` for `nullable` / `nonnull` annotations; Use `nullable` / `nonnull` on public APIs and where you think necessary.
+- Use google `Preconditions` to check argument / state / nonnull preconditions instead of `Objects.requireNonNull()` or manual if-statement etc.
+- Use `Preconditions` to check `nonnull` even after the `nonnull` annotations.
+
+  **Example:**
+  ```java
+  @Override
+  public IBuilder<S, I> setEntryCallback(@NonNull S state, @Nullable OnEnterStateCallback<S, I> callback) {
+      Preconditions.checkNotNull(state, "Provided \"state\" can't be null.");
+  
+      ...
+  }
+  ```
+- Avoid return null and use `Optional<T>` if you think it's necessary.
+
+### Best Practices for Reflection
 - Use `ReflectionUtils` methods to get reflection-based references wherever possible.
-- Get inaccessible fields, methods, or constructors using `MethodHandle`s and `VarHandle`s, not `Field`s/`Method`s/`Constructor`s.
-  - If simply checking existence of fields/methods/constructors, classic reflection is fine.
+- Get inaccessible fields, methods, or constructors using `MethodHandle`s and `VarHandle`s, not `Field`s / `Method`s / `Constructor`s.
+  - If simply checking existence of fields / methods / constructors, classic reflection is fine.
   - For `set`ting valid `final` fields, classic reflection is necessary.
 - If caching handles, cache them in a `static final` field directly or in a `record`.
   This allows the JVM to inline them for the fastest performance.  
   See [this article](https://jornvernee.github.io/methodhandles/2024/01/19/methodhandle-primer.html#method-handle-inlining) for more details.
-  - Use a record if caching more than 1 handle.
+  - Use a record if caching more than one handle.
 
   **Bad:**
   ```java
@@ -125,8 +137,8 @@ Thanks for your interest! We welcome **all kinds of contributions** – code, do
       // init delegate here
   }
   
-  private record Delegate(
-          MethodHandle handle1, MethodHandle handle2) {}
+  private record Delegate(MethodHandle handle1, MethodHandle handle2) { 
+  }
   ```
 - Don't use `invoke` if not necessary; use `invokeExact`.
 - Write helper methods for invoking handles to (1) easily fulfill the `invokeExact` contract for types and (2) avoid `try...catch` blocks spread throughout your code.

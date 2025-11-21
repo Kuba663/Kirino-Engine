@@ -1,5 +1,37 @@
 # Kirino Engine
 
+> The project is highly WIP - contributions are welcome to help accelerate development!
+
+Kirino-Engine is a CPU-GPU dual pipeline rendering engine that combines ECS paradigm and modern rendering techniques.
+Its primary goal is to overhaul most of the Minecraft's rendering in a future-proof and elegant manner **_and_** provide a set of clean rendering APIs to mod devs.
+
+## Q&A
+
+- Why is Kirino-Engine different compared to OptiFine / Sodium / Iris / Canvas?
+  - Because Kirino-Engine is fundamentally GPU-driven and ECS-driven, unlike traditional optimizers or shader mods
+  - Kirino-Engine reimagines the entire rendering pipeline
+  - Kirino-Engine pays a huge attention to its architecture
+  - Kirino-Engine isn't simply an optimizer or shader mod
+
+- What's the most exciting features in dev?
+  - GPU-Driven Meshlet Rendering & Virtual Geometry
+  - Vulkan-like / Modern paradigms (like Multi-Draw Indirect, Pipeline State Objects, etc.)
+  - Semi-Static Global Illumination Driven by Surface Cards & Temporal Accumulation
+  - ECS & Parallel Job System
+  - Async GPU Resource System
+  - Multi-resolution & HDR & Post-processing Pipeline
+
+- What can I expect as a player?
+  - Performance wise: smoother performance and FPS improvements
+  - Shader wise: modern lighting techniques and better global illumination
+  - Configurability: optional HDR, optional resolution up-scaling or down-scaling, optional post-processing, etc.
+
+- What can I expect as a mod developer?
+  - Clean rendering APIs that hide OpenGL completely
+  - Versatile rendering APIs that focus on the concept of render commands
+  - Will be able to create emissive blocks, PBR, fogs, decals, any post-processing effects
+  - Future-proof architecture
+
 ## Roadmap & Todos
 [View Project Board](https://github.com/orgs/CleanroomMC/projects/13) to track development progress, features and ideas.
 
@@ -10,6 +42,8 @@ If you are curious about the tech/code details, check out [Engine Overview Page]
 If you would like to contribute, check out our [Contributing Page](https://github.com/CleanroomMC/Kirino-Engine?tab=contributing-ov-file)!
 
 ## MVP Goals
+
+It's a bit outdated, [Project Board](https://github.com/orgs/CleanroomMC/projects/13) takes precedence.
 
 <details>
 <summary>GL Abstraction</summary>
@@ -86,6 +120,7 @@ If you would like to contribute, check out our [Contributing Page](https://githu
 - RenderPass / Subpass architecture ✅
 - Built-in Multi-resolution & Super-sampling 🚧
 - Immutable Pipeline State Object ✅
+- Meshlets 🚧
 - Scriptable pipeline
 - ...
 
@@ -95,9 +130,9 @@ If you would like to contribute, check out our [Contributing Page](https://githu
 
 Kirino Engine is made possible thanks to the efforts of all contributors!
 
-- [tttsaurus](https://github.com/tttsaurus) - Core maintainer
-- [Eerie](https://github.com/Kuba663) - Feature & algorithm contributions
-- [ChaosStrikez](https://github.com/jchung01) - Algorithm fixes
+- [tttsaurus](https://github.com/tttsaurus) - Core maintainer, architecture design, and overall project coordination
+- [Eerie](https://github.com/Kuba663) - Feature development and algorithmic contributions
+- [ChaosStrikez](https://github.com/jchung01) - Code refactoring, call-site improvements, and algorithm fixes
 
 ## License
 
