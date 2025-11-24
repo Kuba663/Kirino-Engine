@@ -83,6 +83,10 @@ public class MinecraftScene extends CleanWorld {
     public void notifyLightUpdate(int x, int y, int z) {
     }
 
+    // temp
+    ChunkPrioritizationSystem chunkPrioritizationSystem = null;
+    ChunkMeshletGenSystem chunkMeshletGenSystem = null;
+
     @Override
     public void update() {
         if (rebuildWorld) {
@@ -103,28 +107,18 @@ public class MinecraftScene extends CleanWorld {
             // all changes are buffered and will be consumed at the end of this update
         }
 
-//        if (true) {
-//            StopWatch stopWatch = StopWatch.createStarted();
-//
-//            (new ChunkPrioritizationSystem(camera)).update(entityManager, jobScheduler);
-//
-//            stopWatch.stop();
-//            KirinoCore.LOGGER.info("executed!!! " + stopWatch.getTime(TimeUnit.MILLISECONDS) + " ms");
-//        }
+        // temp
+        if (chunkPrioritizationSystem == null) {
+            chunkPrioritizationSystem = new ChunkPrioritizationSystem(camera);
+        }
+        chunkPrioritizationSystem.update(entityManager, jobScheduler);
 
-//        // test
-//        if (c == 3) {
-//            StopWatch stopWatch = StopWatch.createStarted();
-//
-//            (new ChunkMeshletGenSystem(chunkProvider, gizmosManager)).update(entityManager, jobScheduler);
-//
-//            stopWatch.stop();
-//            KirinoCore.LOGGER.info("executed!!! " + stopWatch.getTime(TimeUnit.MILLISECONDS) + " ms");
-//        }
-//        c++;
+        if (chunkMeshletGenSystem == null) {
+            chunkMeshletGenSystem = new ChunkMeshletGenSystem(chunkProvider, gizmosManager);
+        }
+        chunkMeshletGenSystem.setPriority(0);
+        chunkMeshletGenSystem.update(entityManager, jobScheduler);
 
         super.update();
     }
-
-    static int c = 0;
 }

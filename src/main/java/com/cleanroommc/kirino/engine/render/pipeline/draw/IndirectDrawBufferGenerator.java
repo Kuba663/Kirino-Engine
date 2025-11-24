@@ -17,7 +17,7 @@ public class IndirectDrawBufferGenerator {
     public final int bufferSize;
 
     public final static int IDB_STRIDE_BYTE = 5 * Integer.BYTES;
-    public final static int MEMORY_STACK_LIMIT_BYTE = 1024 * 512; // 0.5MB
+    public final static int MEMORY_STACK_LIMIT_BYTE = 1024 * 256; // 0.25MB
 
     private int offset = 0;
 

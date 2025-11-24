@@ -36,27 +36,34 @@ public class GizmosManager {
     private final ConcurrentLinkedQueue<BlockRecord> blocks = new ConcurrentLinkedQueue<>();
 
     // test
-    public void addMeshlet(Meshlet meshlet) {
+    public void addMeshlet(int xOffset, int yOffset, int zOffset, Meshlet meshlet) {
+//        if (blockSurfaces.size() > 3000) {
+//            return;
+//        }
         KirinoCore.LOGGER.info("Added a meshlet (" + meshlet.blocks.size() + " blocks). current meshlet count: " + counter.addAndGet(1) + ", current block count: " + blockSurfaces.size());
 
         Random random = new Random();
         Color color = new Color(random.nextFloat(), random.nextFloat(), random.nextFloat(), 0.5f);
         for (Block block : meshlet.blocks) {
-            StringBuilder face = new StringBuilder();
-            face.append((block.faceMask & FACE_X_POS) != 0 ? "1" : "0")
-                    .append((block.faceMask & FACE_X_NEG) != 0 ? "1" : "0")
-                    .append((block.faceMask & FACE_Y_POS) != 0 ? "1" : "0")
-                    .append((block.faceMask & FACE_Y_NEG) != 0 ? "1" : "0")
-                    .append((block.faceMask & FACE_Z_POS) != 0 ? "1" : "0")
-                    .append((block.faceMask & FACE_Z_NEG) != 0 ? "1" : "0");
+//            StringBuilder face = new StringBuilder();
+//            face.append((block.faceMask & FACE_X_POS) != 0 ? "1" : "0")
+//                    .append((block.faceMask & FACE_X_NEG) != 0 ? "1" : "0")
+//                    .append((block.faceMask & FACE_Y_POS) != 0 ? "1" : "0")
+//                    .append((block.faceMask & FACE_Y_NEG) != 0 ? "1" : "0")
+//                    .append((block.faceMask & FACE_Z_POS) != 0 ? "1" : "0")
+//                    .append((block.faceMask & FACE_Z_NEG) != 0 ? "1" : "0");
+//
+//            KirinoCore.LOGGER.info("    block pos: " + block.position.x + ", " + block.position.y + ", " + block.position.z + ", " + face);
 
-            KirinoCore.LOGGER.info("    block pos: " + block.position.x + ", " + block.position.y + ", " + block.position.z + ", " + face);
+            int posX = block.position.x + xOffset;
+            int posY = block.position.y + yOffset;
+            int posZ = block.position.z + zOffset;
 
-            if (blocks.contains(new BlockRecord(block.position.x, block.position.y, block.position.z, block.faceMask))) {
-                addBlockSurface(block.position.x, block.position.y, block.position.z, block.faceMask, Color.RED.getRGB());
+            if (blocks.contains(new BlockRecord(posX, posY, posZ, block.faceMask))) {
+                addBlockSurface(posX, posY, posZ, block.faceMask, Color.RED.getRGB());
             } else {
-                blocks.add(new BlockRecord(block.position.x, block.position.y, block.position.z, block.faceMask));
-                addBlockSurface(block.position.x, block.position.y, block.position.z, block.faceMask, color.getRGB());
+                blocks.add(new BlockRecord(posX, posY, posZ, block.faceMask));
+                addBlockSurface(posX, posY, posZ, block.faceMask, color.getRGB());
             }
         }
     }

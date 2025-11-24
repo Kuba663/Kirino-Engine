@@ -12,4 +12,5 @@ import com.cleanroommc.kirino.engine.render.staging.StagingBufferManager;
  * @see StagingBufferManager
  */
 public class BufferStorage {
+    private final static int PAGE_SIZE_IN_BYTE = 1024 * 1024 * 10; // 10MB
 }

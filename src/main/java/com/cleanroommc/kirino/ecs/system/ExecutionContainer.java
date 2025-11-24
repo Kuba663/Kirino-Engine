@@ -20,13 +20,11 @@ public class ExecutionContainer {
         updateExecutions(null, (JobScheduler.ExecutionHandle[]) null);
     }
 
-    @SuppressWarnings("all")
-    public void updateExecutions(@NonNull JobScheduler.ExecutionHandle @NonNull ... handles) {
+    public void updateExecutions(JobScheduler.ExecutionHandle @NonNull ... handles) {
         updateExecutions(null, handles);
     }
 
-    @SuppressWarnings("all")
-    public void updateExecutions(@NonNull CompletableFuture<?> @Nullable [] futures, @NonNull JobScheduler.ExecutionHandle @Nullable ... handles) {
+    public void updateExecutions(@NonNull CompletableFuture<?> @Nullable [] futures, JobScheduler.ExecutionHandle @Nullable ... handles) {
         this.handles.clear();
         this.futures.clear();
         if (futures != null) {

@@ -5,7 +5,7 @@ import com.cleanroommc.kirino.ecs.entity.EntityQuery;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Jobs will be instantiated per thread.
+ * Jobs will be instantiated per thread. A job must have an empty (no parameters) constructor.
  */
 public interface IParallelJob {
     /**

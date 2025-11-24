@@ -36,6 +36,9 @@ public class ChunkMeshletGenJob implements IParallelJob {
     public int pass = 0;
 
     @JobExternalDataQuery
+    public Integer priority;
+
+    @JobExternalDataQuery
     public ChunkProviderClient chunkProvider;
 
     @JobExternalDataQuery
@@ -53,6 +56,9 @@ public class ChunkMeshletGenJob implements IParallelJob {
     @JobDataQuery(componentClass = ChunkComponent.class, fieldAccessChain = {"isDirty"})
     public IPrimitiveArray isDirtyArray;
 
+    @JobDataQuery(componentClass = ChunkComponent.class, fieldAccessChain = {"priority"})
+    public IPrimitiveArray priorityArray;
+
     @Override
     public void query(@NonNull EntityQuery entityQuery) {
         entityQuery.with(ChunkComponent.class);
@@ -60,11 +66,18 @@ public class ChunkMeshletGenJob implements IParallelJob {
 
     @Override
     public int estimateWorkload(int index) {
+        if (!isDirtyArray.getBool(index)) {
+            return 1;
+        }
+        if (priorityArray.getInt(index) != priority) {
+            return 1;
+        }
+
         return 4096 * 2;
     }
 
     record ChunkCluster(
-            int chunkY,
+            int chunkX, int chunkY, int chunkZ,
             Chunk center,
             Chunk xPlus,
             Chunk xMinus,
@@ -90,6 +103,9 @@ public class ChunkMeshletGenJob implements IParallelJob {
     final static double MESHLET_MAX_ANGLE = 1.1f * Math.PI / 2f;
     final static int MESHLET_MAX_SIZE = 32;
 
+    int[][][] faceMask = new int[16][16][16];
+    boolean[][][] visited = new boolean[16][16][16];
+
     @Override
     public void execute(@NonNull EntityManager entityManager, int index, int threadOrdinal) {
         Preconditions.checkState(pass == 0 || pass == 1 || pass == 2,
@@ -98,24 +114,35 @@ public class ChunkMeshletGenJob implements IParallelJob {
         if (!isDirtyArray.getBool(index)) {
             return;
         }
+        if (priorityArray.getInt(index) != priority) {
+            return;
+        }
+
+        isDirtyArray.setBool(index, false);
 
         int chunkX = chunkPosXArray.getInt(index);
         int chunkY = chunkPosYArray.getInt(index);
         int chunkZ = chunkPosZArray.getInt(index);
 
         ChunkCluster chunkCluster = new ChunkCluster(
-                chunkY,
+                chunkX, chunkY, chunkZ,
                 chunkProvider.provideChunk(chunkX, chunkZ),
                 chunkProvider.provideChunk(chunkX + 1, chunkZ),
                 chunkProvider.provideChunk(chunkX - 1, chunkZ),
                 chunkProvider.provideChunk(chunkX, chunkZ + 1),
                 chunkProvider.provideChunk(chunkX, chunkZ - 1));
 
-        int[][][] faceMask = new int[16][16][16];
-        boolean[][][] visited = new boolean[16][16][16];
-
         buildFaceMask(faceMask, chunkCluster);
-        regionGrowing(faceMask, visited, entityManager);
+
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                for (int z = 0; z < 16; z++) {
+                    visited[x][y][z] = false;
+                }
+            }
+        }
+
+        regionGrowing(faceMask, visited, chunkCluster, entityManager);
     }
 
     /**
@@ -249,7 +276,7 @@ public class ChunkMeshletGenJob implements IParallelJob {
         return (new Vector3f(x, y, z)).normalize();
     }
 
-    void regionGrowing(int[][][] faceMask, boolean[][][] visited, EntityManager entityManager) {
+    void regionGrowing(int[][][] faceMask, boolean[][][] visited, ChunkCluster chunkCluster, EntityManager entityManager) {
         for (int x = 0; x < 16; x++) {
             for (int y = 0; y < 16; y++) {
                 for (int z = 0; z < 16; z++) {
@@ -312,7 +339,7 @@ public class ChunkMeshletGenJob implements IParallelJob {
                         }
                     }
 
-                    gizmosManager.addMeshlet(new Meshlet(cluster));
+                    gizmosManager.addMeshlet(chunkCluster.chunkX * 16, chunkCluster.chunkY * 16, chunkCluster.chunkZ * 16, new Meshlet(cluster));
                 }
             }
         }

@@ -28,7 +28,7 @@ public class ChunkPrioritizationJob implements IParallelJob {
     @JobDataQuery(componentClass = ChunkComponent.class, fieldAccessChain = {"priority"})
     public IPrimitiveArray priorityArray;
 
-    private Vector3f worldOffset = null;
+    Vector3f worldOffset = null;
 
     @Override
     public void execute(@NonNull EntityManager entityManager, int index, int threadOrdinal) {
