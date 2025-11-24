@@ -8,6 +8,7 @@ import com.cleanroommc.kirino.ecs.storage.ArchetypeDataPool;
 import com.cleanroommc.kirino.ecs.storage.ArrayRange;
 import com.cleanroommc.kirino.ecs.storage.IPrimitiveArray;
 import com.google.common.base.Preconditions;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class JobScheduler {
         this.jobRegistry = jobRegistry;
     }
 
-    public record ExecutionHandle(CompletableFuture<?> future, int totalThreadCount, boolean async) {
+    public record ExecutionHandle(@NonNull CompletableFuture<?> future, int totalThreadCount, boolean async) {
     }
 
     public ExecutionHandle executeParallelJob(EntityManager entityManager, Class<? extends IParallelJob> clazz, @Nullable Map<String, Object> externalData, Executor executor) {

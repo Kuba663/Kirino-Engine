@@ -27,5 +27,6 @@ public class ChunkMeshletGenSystem extends CleanSystem {
         if (handle.async()) {
             handle.future().join();
         }
+        execution.updateExecutions(handle);
     }
 }
