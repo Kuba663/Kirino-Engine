@@ -33,12 +33,16 @@ public class JobRegistry {
         Preconditions.checkNotNull(setter);
 
         MethodType setterType = setter.type();
+        if (fieldClass.isPrimitive()) {
+            setterType = setterType.wrap().changeReturnType(void.class);
+        }
+
         CallSite callSite;
         try {
             callSite = LambdaMetafactory.metafactory(LOOKUP, "inject",
                     MethodType.methodType(IJobDataInjector.class, MethodHandle.class),
                     setterType.erase(),
-                    MethodHandles.exactInvoker(setterType),
+                    MethodHandles.exactInvoker(setter.type()),
                     setterType);
         } catch (LambdaConversionException e) {
             throw new RuntimeException(e);
