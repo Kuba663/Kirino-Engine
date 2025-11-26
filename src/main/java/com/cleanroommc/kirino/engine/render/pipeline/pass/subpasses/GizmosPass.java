@@ -16,6 +16,8 @@ import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL20C;
 
+import java.util.List;
+
 public class GizmosPass extends Subpass {
     private final GizmosManager gizmosManager;
 
@@ -67,8 +69,10 @@ public class GizmosPass extends Subpass {
 
     @Override
     public void collectCommands(DrawQueue drawQueue) {
-        for (HighLevelDC command : gizmosManager.getDrawCommands()) {
+        List<HighLevelDC> list =  gizmosManager.getDrawCommands();
+        for (HighLevelDC command : list) {
             drawQueue.enqueue(command);
         }
+        list.clear();
     }
 }

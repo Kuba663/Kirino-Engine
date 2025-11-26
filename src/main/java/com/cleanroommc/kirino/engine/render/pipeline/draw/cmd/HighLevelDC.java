@@ -1,7 +1,8 @@
 package com.cleanroommc.kirino.engine.render.pipeline.draw.cmd;
 
 import com.cleanroommc.kirino.engine.render.pipeline.pass.PassHint;
-import io.netty.util.Recycler;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class HighLevelDC implements IDrawCommand {
 
@@ -10,21 +11,36 @@ public final class HighLevelDC implements IDrawCommand {
         SCENE_SUBMITTED
     }
 
-    private static final Recycler<HighLevelDC> RECYCLER = new Recycler<>() {
-        @Override
-        protected HighLevelDC newObject(Handle<HighLevelDC> handle) {
-            return new HighLevelDC(handle);
+    private static final int POOL_CAPACITY = 8192;
+    private static final HighLevelDC[] POOL = new HighLevelDC[POOL_CAPACITY];
+    private static final AtomicInteger POOL_INDEX = new AtomicInteger(0);
+
+    static {
+        for (int i = 0; i < POOL_CAPACITY; i++) {
+            POOL[i] = new HighLevelDC();
         }
-    };
+    }
 
-    private final Recycler.Handle<HighLevelDC> handle;
-
-    private HighLevelDC(Recycler.Handle<HighLevelDC> handle) {
-        this.handle = handle;
+    private HighLevelDC() {
     }
 
     public static HighLevelDC get() {
-        return RECYCLER.get();
+        int index = POOL_INDEX.getAndIncrement();
+        if (index >= POOL_CAPACITY) {
+            POOL_INDEX.set(POOL_CAPACITY - 1);
+            return new HighLevelDC();
+        }
+        return POOL[index];
+    }
+
+    public void recycle() {
+        reset();
+        int index = POOL_INDEX.decrementAndGet();
+        if (index < 0) {
+            POOL_INDEX.set(0);
+        } else {
+            POOL[index] = this;
+        }
     }
 
     public CommandSource source = null;
@@ -40,11 +56,6 @@ public final class HighLevelDC implements IDrawCommand {
         meshTicketID = null;
         mode = -1;
         elementType = -1;
-    }
-
-    public void recycle() {
-        reset();
-        handle.recycle(this);
     }
 
     private HighLevelDC initHighLevelDC(

@@ -1,6 +1,6 @@
 package com.cleanroommc.kirino.engine.render.pipeline.draw.cmd;
 
-import io.netty.util.Recycler;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class LowLevelDC implements IDrawCommand {
 
@@ -11,21 +11,36 @@ public final class LowLevelDC implements IDrawCommand {
         MULTI_ELEMENTS_INDIRECT_UNIT // indirectly drawable (components of MULTI_ELEMENTS_INDIRECT)
     }
 
-    private static final Recycler<LowLevelDC> RECYCLER = new Recycler<>() {
-        @Override
-        protected LowLevelDC newObject(Handle<LowLevelDC> handle) {
-            return new LowLevelDC(handle);
+    private static final int POOL_CAPACITY = 8192;
+    private static final LowLevelDC[] POOL = new LowLevelDC[POOL_CAPACITY];
+    private static final AtomicInteger POOL_INDEX = new AtomicInteger(0);
+
+    static {
+        for (int i = 0; i < POOL_CAPACITY; i++) {
+            POOL[i] = new LowLevelDC();
         }
-    };
+    }
 
-    private final Recycler.Handle<LowLevelDC> handle;
-
-    private LowLevelDC(Recycler.Handle<LowLevelDC> handle) {
-        this.handle = handle;
+    private LowLevelDC() {
     }
 
     public static LowLevelDC get() {
-        return RECYCLER.get();
+        int index = POOL_INDEX.getAndIncrement();
+        if (index >= POOL_CAPACITY) {
+            POOL_INDEX.set(POOL_CAPACITY - 1);
+            return new LowLevelDC();
+        }
+        return POOL[index];
+    }
+
+    public void recycle() {
+        reset();
+        int index = POOL_INDEX.decrementAndGet();
+        if (index < 0) {
+            POOL_INDEX.set(0);
+        } else {
+            POOL[index] = this;
+        }
     }
 
     public DrawType type = null;
@@ -65,11 +80,6 @@ public final class LowLevelDC implements IDrawCommand {
         idEboFirstIndex = -1;
         idBaseVertex = -1;
         idBaseInstance = -1;
-    }
-
-    public void recycle() {
-        reset();
-        handle.recycle(this);
     }
 
     // ========== filler methods ==========

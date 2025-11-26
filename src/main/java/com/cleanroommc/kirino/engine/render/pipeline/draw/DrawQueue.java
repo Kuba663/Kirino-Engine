@@ -1,5 +1,6 @@
 package com.cleanroommc.kirino.engine.render.pipeline.draw;
 
+import com.cleanroommc.kirino.KirinoCore;
 import com.cleanroommc.kirino.engine.render.pipeline.draw.cmd.HighLevelDC;
 import com.cleanroommc.kirino.engine.render.pipeline.draw.cmd.IDrawCommand;
 import com.cleanroommc.kirino.engine.render.pipeline.draw.cmd.LowLevelDC;
@@ -131,7 +132,13 @@ public class DrawQueue {
                 continue;
             }
 
-            baked.add(idbGenerator.generate(units, entry.getKey().vao, entry.getKey().mode, entry.getKey().elementType));
+            int start = 0;
+            while (start < units.size()) {
+                int end = Math.min(start + KirinoCore.KIRINO_CONFIG_HUB.maxMultiDrawIndirectUnitCount, units.size());
+                List<LowLevelDC> chunk = units.subList(start, end);
+                baked.add(idbGenerator.generate(chunk, entry.getKey().vao, entry.getKey().mode, entry.getKey().elementType));
+                start = end;
+            }
         }
 
         deque = new ArrayDeque<>(baked);
