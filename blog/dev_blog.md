@@ -347,3 +347,17 @@ Add double buffering ping pong copy for vertex/index output; issue resolved!
 - Stabilize/Finish shader debug infra
 - Refactor `RenderExtension` and post-processing registration so render extension setup is less ad hoc
 - Implement full texture abstraction
+
+### SDF AO Plan
+- Generate SDF occupancy grid (preferably split every voxel into 4^3 cubes; we only care about the foreground, r<=8 chunks, so it won't explode)
+  - For irregular non-fullblocks, we need to generate their voxel occupancy ahead of time.
+  - As a result, we'll get a nearly accurate occupancy grid of the world (static objects only)
+- Create another compute pass after gbuffer to compute the per-pixel AO based on the occupancy grid;
+  Not necessarily full resolution compute (could be half res; 4 times less work)
+- An AO tex based on the current view is therefore generated
+- Fetch data from the AO tex in frag shader
+
+We'll therefore be able to give AO to any non-fullblock tiles, including self-occlusion and environment occlusion
+![](gallery/2026-04-11.png)
+Essentially addressing this vanilla AO issue.
+
