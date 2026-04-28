@@ -15,7 +15,7 @@ public final class KirinoGLModContainer extends DummyModContainer {
 
         meta.modId = "kirino_gl";
         meta.name = "Kirino GL";
-        meta.version = "epoch-1.a2";
+        meta.version = "epoch-1.a3";
     }
 
     @Override

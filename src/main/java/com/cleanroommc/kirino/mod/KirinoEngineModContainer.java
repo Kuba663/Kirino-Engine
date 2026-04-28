@@ -17,7 +17,7 @@ public final class KirinoEngineModContainer extends DummyModContainer {
         meta.name = "Kirino Engine";
 
         meta.description = """
-                Kirino-Engine combines an ECS-based data-oriented architecture,\s
+                (WIP: no actual changes will be applied) Kirino-Engine combines an ECS-based data-oriented architecture,\s
                 explicit modern OpenGL abstractions,\s
                 and a hybrid CPU-GPU rendering pipeline to reimagine Minecraft's traditional,\s
                 tightly coupled, and CPU-bound rendering.
@@ -30,7 +30,7 @@ public final class KirinoEngineModContainer extends DummyModContainer {
                 - [ChaosStrikez](https://github.com/jchung01 ) - Code refactoring, call-site improvements, and algorithm fixes
                 """;
 
-        meta.version = "epoch-1.a5";
+        meta.version = "epoch-1.a6";
         meta.logoFile = "/logo.png";
 
         meta.authorList.add("tttsaurus");

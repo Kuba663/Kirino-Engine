@@ -15,7 +15,7 @@ public final class KirinoECSModContainer extends DummyModContainer {
 
         meta.modId = "kirino_ecs";
         meta.name = "Kirino ECS";
-        meta.version = "epoch-1.a3";
+        meta.version = "epoch-1.a4";
     }
 
     @Override
