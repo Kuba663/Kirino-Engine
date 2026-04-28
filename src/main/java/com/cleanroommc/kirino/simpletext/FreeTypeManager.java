@@ -17,9 +17,12 @@ import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FreeTypeManager {
+public final class FreeTypeManager {
 
-    public static final Logger LOGGER = LogManager.getLogger("FreeTypeManager");
+    private FreeTypeManager() {
+    }
+
+    public static final Logger LOGGER = LogManager.getLogger("Kirino FreeTypeManager");
 
     public static final int DEFAULT_PIXEL_SIZE = 32;
 
@@ -27,8 +30,8 @@ public class FreeTypeManager {
     private boolean initialized = false;
     private boolean destroyed = false;
 
-    private final Map<String, FT_Face> FACE_CACHE = new HashMap<>();
-    private final Map<ResourceLocation, ByteBuffer> FONT_DATA_CACHE = new HashMap<>();
+    private final Map<String, FT_Face> faceCache = new HashMap<>();
+    private final Map<ResourceLocation, ByteBuffer> fontDataCache = new HashMap<>();
 
     /**
      * Can be called multiple times without crashing. Later calls will return directly.
@@ -49,14 +52,20 @@ public class FreeTypeManager {
                 throw new IllegalStateException("Failed to initialize FreeType: " + FreeType.FT_Error_String(error));
             }
 
-            long library = pointer.get(0);
+            library = pointer.get(0);
+
+            Preconditions.checkState(library != 0, "FreeType library pointer must not be 0.");
 
             IntBuffer major = stack.mallocInt(1);
             IntBuffer minor = stack.mallocInt(1);
             IntBuffer patch = stack.mallocInt(1);
 
             FreeType.FT_Library_Version(library, major, minor, patch);
-            LOGGER.info("Loaded FreeType " + major.get(0) + "." + minor.get(0) + "." + patch.get(0));
+            LOGGER.info("Loaded FreeType {}.{}.{} Lib Pointer: 0x{}",
+                    major.get(0),
+                    minor.get(0),
+                    patch.get(0),
+                    Long.toHexString(library));
 
             initialized = true;
         }
@@ -75,11 +84,11 @@ public class FreeTypeManager {
 
         String key = rl.toString() + "#" + faceIndex + "#" + pixelSize;
 
-        if (FACE_CACHE.containsKey(key)) {
-            return FACE_CACHE.get(key);
+        if (faceCache.containsKey(key)) {
+            return faceCache.get(key);
         }
 
-        ByteBuffer fontBuffer = FONT_DATA_CACHE.computeIfAbsent(rl, FreeTypeManager::loadResource);
+        ByteBuffer fontBuffer = fontDataCache.computeIfAbsent(rl, FreeTypeManager::loadResource);
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer pointer = stack.mallocPointer(1);
@@ -109,7 +118,7 @@ public class FreeTypeManager {
                         error));
             }
 
-            FACE_CACHE.put(key, face);
+            faceCache.put(key, face);
 
             return face;
         } catch (Throwable e) {
@@ -125,15 +134,17 @@ public class FreeTypeManager {
     public void destroy() {
         Preconditions.checkState(initialized, "Must be initialized.");
 
-        for (FT_Face face : FACE_CACHE.values()) {
+        for (FT_Face face : faceCache.values()) {
             FreeType.FT_Done_Face(face);
         }
-        FACE_CACHE.clear();
+        faceCache.clear();
 
-        for (ByteBuffer buf : FONT_DATA_CACHE.values()) {
+        for (ByteBuffer buf : fontDataCache.values()) {
             MemoryUtil.memFree(buf);
         }
-        FONT_DATA_CACHE.clear();
+        fontDataCache.clear();
+
+        long lib = library;
 
         if (library != 0) {
             FreeType.FT_Done_FreeType(library);
@@ -142,6 +153,8 @@ public class FreeTypeManager {
 
         initialized = false;
         destroyed = true;
+
+        LOGGER.info("Destroyed FreeType Lib 0x{}.", Long.toHexString(lib));
     }
 
     @NonNull

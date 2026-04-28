@@ -178,7 +178,7 @@ public final class KirinoCommonCore {
 
     @SubscribeEvent
     public static void onKirinoOneTimeConfig(KirinoOneTimeConfigEvent event) {
-        event.getOneTimeConfig().enableRenderDelegate = false;
+        event.getOneTimeConfig().enableRenderDelegate = true;
         event.getOneTimeConfig().enableShaderDebug = true;
     }
 }

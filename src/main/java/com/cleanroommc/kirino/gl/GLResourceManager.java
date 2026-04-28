@@ -7,9 +7,9 @@ import java.util.PriorityQueue;
 
 public final class GLResourceManager {
 
-    private static boolean active = false;
+    private static boolean active;
 
-    public static void turnOn() {
+    static {
         active = true;
     }
 

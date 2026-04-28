@@ -3,7 +3,11 @@ package com.cleanroommc.kirino;
 import com.cleanroommc.kirino.engine.render.core.shader.ImmediateShaderAccess;
 import com.cleanroommc.kirino.simpletext.FreeTypeManager;
 import com.cleanroommc.kirino.simpletext.SimpleTextRenderer;
+import com.cleanroommc.kirino.utils.ReflectionUtils;
+import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
+
+import java.lang.invoke.MethodHandle;
 
 public final class ImmediateClientServices {
 
@@ -15,11 +19,11 @@ public final class ImmediateClientServices {
 
     private ImmediateClientServices() {
         shaderAccess = new ImmediateShaderAccess();
-        freeTypeManager = new FreeTypeManager();
+        freeTypeManager = MethodHolder.newFreeTypeManager();
         freeTypeManager.init();
         textRenderer = new SimpleTextRenderer(freeTypeManager,
                 new ResourceLocation("forge:fonts/jetbrains/jetbrains_mono_nl_regular.ttf"));
-        freeTypeManager.destroy();
+//        freeTypeManager.destroy();
     }
 
     private final ImmediateShaderAccess shaderAccess;
@@ -36,5 +40,26 @@ public final class ImmediateClientServices {
 
     public SimpleTextRenderer text() {
         return textRenderer;
+    }
+
+    private static class MethodHolder {
+        static final Delegate DELEGATE;
+
+        static {
+            DELEGATE = new Delegate(ReflectionUtils.getConstructor(FreeTypeManager.class));
+
+            Preconditions.checkNotNull(DELEGATE.freeTypeManagerCtor);
+        }
+
+        static FreeTypeManager newFreeTypeManager() {
+            try {
+                return (FreeTypeManager) DELEGATE.freeTypeManagerCtor.invokeExact();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        record Delegate(MethodHandle freeTypeManagerCtor) {
+        }
     }
 }
