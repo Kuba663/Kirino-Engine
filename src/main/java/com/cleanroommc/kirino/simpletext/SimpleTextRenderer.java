@@ -53,7 +53,7 @@ public class SimpleTextRenderer {
             return;
         }
 
-        FreeType.FT_Load_Char(face, c, FreeType.FT_LOAD_RENDER);
+        FreeType.FT_Load_Char(face, c, FreeType.FT_LOAD_NO_HINTING);
         FT_GlyphSlot glyph = face.glyph();
         FT_Bitmap bitmap = glyph.bitmap();
         AlphaBitmap alphaBitmap = FreeTypeBitmapDecoder.decode(bitmap);
@@ -80,37 +80,5 @@ public class SimpleTextRenderer {
         texture2D.texParamI(GL33.GL_TEXTURE_SWIZZLE_B, GL11.GL_ONE);
         texture2D.texParamI(GL33.GL_TEXTURE_SWIZZLE_A, GL11.GL_RED);
         GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
-    }
-
-    public void draw(int x, int y, int scale) {
-        int prevId = texture2D.fetchCurrentBoundTexID();
-        texture2D.bind();
-
-        GlStateManager.color(1f, 1f, 1f, 1f);
-
-        int width = texture2D.texture.extentX() * scale;
-        int height = texture2D.texture.extentY() * scale;
-
-        GlStateManager.enableTexture2D();
-        GlStateManager.disableLighting();
-        GlStateManager.enableBlend();
-        GlStateManager.disableAlpha();
-        GlStateManager.disableDepth();
-        GlStateManager.tryBlendFuncSeparate(
-                GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                GlStateManager.SourceFactor.ONE,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder bufferbuilder = tessellator.getBuffer();
-        bufferbuilder.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX);
-        bufferbuilder.pos(x, y, 0).tex(0, 0).endVertex();
-        bufferbuilder.pos(x, y + height, 0).tex(0, 1).endVertex();
-        bufferbuilder.pos(x + width, y + height, 0).tex(1, 1).endVertex();
-        bufferbuilder.pos(x + width, y, 0).tex(1, 0).endVertex();
-        tessellator.draw();
-
-        texture2D.bind(prevId);
     }
 }

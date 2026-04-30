@@ -1,10 +1,12 @@
 package com.cleanroommc.kirino.engine.render.usage.debug.hud.impl;
 
 import com.cleanroommc.kirino.ImmediateClientServices;
+import com.cleanroommc.kirino.engine.ShutdownManager;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.HUDContext;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.ImmediateHUD;
 import com.cleanroommc.kirino.simpletext.freetype.AlphaBitmap;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapDecoder;
+import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
@@ -13,7 +15,6 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.freetype.FT_Bitmap;
-import org.lwjgl.util.freetype.FT_GlyphSlot;
 import org.lwjgl.util.freetype.FreeType;
 import org.lwjglx.input.Keyboard;
 
@@ -27,6 +28,14 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
 
     private char inputChar = 'A';
     private AlphaBitmap bitmap = null;
+
+    public FreeTypeDebugHUD() {
+        ShutdownManager.register(() -> {
+            if (bitmap != null) {
+                bitmap.close();
+            }
+        });
+    }
 
     @Override
     public void draw(@NonNull HUDContext hud) {
@@ -127,21 +136,15 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
 
     @Nullable
     private static AlphaBitmap genBitmap(char c) {
-        int error = FreeType.FT_Load_Char(
-                ImmediateClientServices.instance().text().getFreeTypeFace(),
-                c,
-                FreeType.FT_LOAD_RENDER);
+        try (FT_Bitmap b = FreeTypeBitmapLoader.load(
+                ImmediateClientServices.instance().text().getFreeTypeFace(), c,
+                FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING)) {
 
-        if (error != FreeType.FT_Err_Ok) {
-            return null;
+            if (b == null) {
+                return null;
+            }
+
+            return FreeTypeBitmapDecoder.decode(b);
         }
-
-        FT_GlyphSlot glyph = ImmediateClientServices.instance().text().getFreeTypeFace().glyph();
-        if (glyph == null) {
-            return null;
-        }
-
-        FT_Bitmap bitmap = glyph.bitmap();
-        return FreeTypeBitmapDecoder.decode(bitmap);
     }
 }

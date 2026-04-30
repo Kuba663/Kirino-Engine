@@ -38,6 +38,7 @@ import com.cleanroommc.kirino.gl.shader.ShaderProgram;
 import com.cleanroommc.kirino.gl.shader.analysis.DefaultShaderAnalyzer;
 import com.cleanroommc.kirino.gl.shader.schema.GLSLRegistry;
 import com.cleanroommc.kirino.gl.vao.VAO;
+import com.cleanroommc.kirino.utils.ForkJoinPoolUtils;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
@@ -155,27 +156,13 @@ public class KirinoEngine {
 
         MinecraftCamera camera = new MinecraftCamera();
 
-        int parallelism = Runtime.getRuntime().availableProcessors();
+        ForkJoinPool systemFlowPool = ForkJoinPoolUtils.newWorkStealingPool();
+        ForkJoinPool systemPool = ForkJoinPoolUtils.newWorkStealingPool();
 
-        // system flow executor
-        ForkJoinPool systemFlowPool = new ForkJoinPool(
-                parallelism,
-                ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-                null,
-                true);
-
-        // system executor
-        ForkJoinPool systemPool = new ForkJoinPool(
-                parallelism,
-                ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-                null,
-                true);
-
-        // todo: refactor
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            systemFlowPool.shutdown();
-            systemPool.shutdown();
-        }));
+        ShutdownManager.registerAsync(() -> {
+            ForkJoinPoolUtils.shutdownPool(systemFlowPool);
+            ForkJoinPoolUtils.shutdownPool(systemPool);
+        });
 
         MinecraftScene scene = new MinecraftScene(
                 storage,

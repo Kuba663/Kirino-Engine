@@ -1,16 +1,23 @@
 package com.cleanroommc.kirino.gl;
 
-import com.cleanroommc.kirino.KirinoClientCore;
-import com.cleanroommc.kirino.KirinoCommonCore;
+import com.cleanroommc.kirino.engine.ShutdownManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.PriorityQueue;
 
+/**
+ * It actives itself (<code>active = true</code>) and registers the shutdown hook when the class is loaded.
+ */
 public final class GLResourceManager {
+
+    private static final Logger LOGGER = LogManager.getLogger("Kirino GLResourceManager");
 
     private static boolean active;
 
     static {
         active = true;
+        ShutdownManager.register(GLResourceManager::disposeAll);
     }
 
     public static boolean isActive() {
@@ -22,8 +29,6 @@ public final class GLResourceManager {
     /**
      * Call this method to keep track of GL resources.
      * The GL resource will only be added to the tracking queue when <code>{@link #isActive()} == true</code>.
-     * You can expect the <code>active</code> toggle to be turned on at an early phase.
-     * (see {@link KirinoClientCore#init()})
      */
     public static void addDisposable(GLDisposable disposable) {
         if (!active) {
@@ -55,18 +60,18 @@ public final class GLResourceManager {
      *
      * <p>Only runs when <code>{@link #isActive()} == true</code>.</p>
      */
-    public static void disposeAll() {
+    private static void disposeAll() {
         if (!active) {
             return;
         }
 
         active = false;
-        KirinoCommonCore.LOGGER.info("Starts disposing OpenGL resources.");
+        LOGGER.debug("Starts disposing OpenGL resources.");
         while (!disposables.isEmpty()) {
             GLDisposable disposable = disposables.poll();
-            KirinoCommonCore.LOGGER.info("Disposing " + disposable.getName());
+            LOGGER.debug("Disposing " + disposable.getName());
             disposable.dispose();
         }
-        KirinoCommonCore.LOGGER.info("Finished.");
+        LOGGER.debug("Finished.");
     }
 }

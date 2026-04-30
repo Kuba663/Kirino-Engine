@@ -12,7 +12,7 @@
       }
   
       this.soundHandler.unloadSounds();
-  +   com.cleanroommc.kirino.gl.GLResourceManager.disposeAll();
+  +   com.cleanroommc.kirino.engine.ShutdownManager.runMainHooks();
   }
   ```
 
