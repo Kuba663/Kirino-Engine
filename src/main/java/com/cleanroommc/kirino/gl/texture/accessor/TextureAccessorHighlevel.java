@@ -31,30 +31,30 @@ public interface TextureAccessorHighlevel {
         }
 
         // implement two of them based on the texture type
-        default void resizeAndAlloc(int width, @Nullable ByteBuffer byteBuffer) {
+        default void resizeAndAlloc(int width, @NonNull ByteBuffer byteBuffer) {
             throw new UnsupportedOperationException("\"resizeAndAlloc\" is not implemented.");
         }
-        default void resizeAndAlloc(int width, @Nullable ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+        default void resizeAndAlloc(int width, @NonNull ByteBuffer byteBuffer, @NonNull TextureFormat format) {
             throw new UnsupportedOperationException("\"resizeAndAlloc\" is not implemented.");
         }
-        default void resizeAndAlloc(int width, int height, @Nullable ByteBuffer byteBuffer) {
+        default void resizeAndAlloc(int width, int height, @NonNull ByteBuffer byteBuffer) {
             throw new UnsupportedOperationException("\"resizeAndAlloc\" is not implemented.");
         }
-        default void resizeAndAlloc(int width, int height, @Nullable ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+        default void resizeAndAlloc(int width, int height, @NonNull ByteBuffer byteBuffer, @NonNull TextureFormat format) {
             throw new UnsupportedOperationException("\"resizeAndAlloc\" is not implemented.");
         }
-        default void resizeAndAlloc(int width, int height, int depthOrLayers, @Nullable ByteBuffer byteBuffer) {
+        default void resizeAndAlloc(int width, int height, int depthOrLayers, @NonNull ByteBuffer byteBuffer) {
             throw new UnsupportedOperationException("\"resizeAndAlloc\" is not implemented.");
         }
-        default void resizeAndAlloc(int width, int height, int depthOrLayers, @Nullable ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+        default void resizeAndAlloc(int width, int height, int depthOrLayers, @NonNull ByteBuffer byteBuffer, @NonNull TextureFormat format) {
             throw new UnsupportedOperationException("\"resizeAndAlloc\" is not implemented.");
         }
 
         // implement both; texture type agnostic
-        default void alloc(boolean mutable, @Nullable ByteBuffer byteBuffer) {
+        default void alloc(boolean mutable, @NonNull ByteBuffer byteBuffer) {
             throw new UnsupportedOperationException("\"alloc\" is not implemented.");
         }
-        default void alloc(boolean mutable, @Nullable ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+        default void alloc(boolean mutable, @NonNull ByteBuffer byteBuffer, @NonNull TextureFormat format) {
             throw new UnsupportedOperationException("\"alloc\" is not implemented.");
         }
 

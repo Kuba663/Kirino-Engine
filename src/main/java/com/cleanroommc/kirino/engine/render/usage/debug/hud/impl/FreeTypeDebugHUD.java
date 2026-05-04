@@ -1,22 +1,31 @@
 package com.cleanroommc.kirino.engine.render.usage.debug.hud.impl;
 
 import com.cleanroommc.kirino.ImmediateClientServices;
-import com.cleanroommc.kirino.KirinoCommonCore;
 import com.cleanroommc.kirino.engine.ShutdownManager;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.HUDContext;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.ImmediateHUD;
+import com.cleanroommc.kirino.gl.shader.Shader;
+import com.cleanroommc.kirino.gl.shader.ShaderProgram;
+import com.cleanroommc.kirino.gl.texture.GLTexture;
+import com.cleanroommc.kirino.gl.texture.accessor.Texture2DAccessor;
+import com.cleanroommc.kirino.gl.texture.meta.FilterMode;
+import com.cleanroommc.kirino.gl.texture.meta.TextureFormat;
+import com.cleanroommc.kirino.gl.texture.meta.WrapMode;
 import com.cleanroommc.kirino.simpletext.freetype.AlphaBitmap;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapDecoder;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
 import com.cleanroommc.kirino.simpletext.sdf.SDFBitmap;
 import com.cleanroommc.kirino.simpletext.sdf.SDFGenerator;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.ResourceLocation;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.*;
 import org.lwjgl.util.freetype.FT_Bitmap;
 import org.lwjgl.util.freetype.FreeType;
 import org.lwjglx.input.Keyboard;
@@ -32,6 +41,11 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
     private char inputChar = 'A';
     private AlphaBitmap bitmap = null;
     private SDFBitmap sdfBitmap = null;
+
+    private float charSize = 20f;
+
+    private Character texCacheTarget = null;
+    private Texture2DAccessor charTex2D;
 
     public FreeTypeDebugHUD() {
         ShutdownManager.registerAsync(() -> {
@@ -94,7 +108,13 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
 
             float drawScale = 3f;
 
-            drawBitmap(hud, hud.getTessellator(), bitmap, hud.getPivotX(), hud.getPivotY(), drawScale);
+            drawBitmap(
+                    hud,
+                    hud.getTessellator(),
+                    bitmap,
+                    hud.getPivotX(),
+                    hud.getPivotY(),
+                    drawScale);
 
             if (sdfBitmap == null) {
                 SDFGenerator generator = new SDFGenerator(ImmediateClientServices.instance().text().getFreeTypeFace(), 8, 8);
@@ -104,9 +124,115 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
             }
 
             if (sdfBitmap != null) {
-                drawSdfBitmap(hud, hud.getTessellator(), sdfBitmap, hud.getPivotX() + bitmap.width() * drawScale, hud.getPivotY(), drawScale);
+                drawSdfBitmap(
+                        hud,
+                        hud.getTessellator(),
+                        sdfBitmap,
+                        hud.getPivotX() + bitmap.width() * drawScale,
+                        hud.getPivotY(),
+                        drawScale);
+
+                if (texCacheTarget == null || texCacheTarget != inputChar) {
+                    charTex2D = new Texture2DAccessor(true, GLTexture.newDsaTex2D(sdfBitmap.width(), sdfBitmap.height()));
+
+                    GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+                    charTex2D.highlevel().alloc(false, sdfBitmap.byteBuffer(), TextureFormat.R8_UNORM);
+                    GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+
+                    charTex2D.setCommonParams(FilterMode.LINEAR, FilterMode.LINEAR, WrapMode.CLAMP_TO_EDGE, WrapMode.CLAMP_TO_EDGE);
+
+                    texCacheTarget = inputChar;
+                }
+
+                if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+                    charSize++;
+                } else if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+                    charSize--;
+                }
+
+                charSize = Math.min(50, Math.max(10, charSize));
+
+                float sdfCharWidth = (float) sdfBitmap.width() / sdfBitmap.height() * charSize;
+                drawSdfChar(
+                        hud,
+                        charTex2D.textureID(),
+                        hud.getPivotX() + bitmap.width() * drawScale + sdfBitmap.width() * drawScale,
+                        hud.getPivotY(),
+                        sdfCharWidth,
+                        charSize);
+
+                drawChar(
+                        hud,
+                        bitmap,
+                        hud.getPivotX() + bitmap.width() * drawScale + sdfBitmap.width() * drawScale + sdfCharWidth,
+                        hud.getPivotY(),
+                        charSize);
             }
         }
+    }
+
+    private static boolean shaderSetup = false;
+    private static ShaderProgram shaderProgram;
+
+    private static void drawSdfChar(HUDContext hud, int texId, float x, float y, float width, float height) {
+        if (!shaderSetup) {
+            Shader vert = ImmediateClientServices.instance().shader().makeShader(new ResourceLocation("forge:shaders/font_test.vert"));
+            Shader frag = ImmediateClientServices.instance().shader().makeShader(new ResourceLocation("forge:shaders/font_test.frag"));
+            ImmediateClientServices.instance().shader().submitToGL(vert, frag);
+            shaderProgram = ImmediateClientServices.instance().shader().makeProgram(vert, frag);
+            shaderSetup = true;
+        }
+
+        int prevProg = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM);
+        shaderProgram.use();
+
+        int posXLoc = GL20.glGetUniformLocation(shaderProgram.getProgramID(), "posX");
+        int posYLoc = GL20.glGetUniformLocation(shaderProgram.getProgramID(), "posY");
+        int widthLoc = GL20.glGetUniformLocation(shaderProgram.getProgramID(), "width");
+        int heightLoc = GL20.glGetUniformLocation(shaderProgram.getProgramID(), "height");
+        int atlasLoc = GL20.glGetUniformLocation(shaderProgram.getProgramID(), "atlas");
+
+        ScaledResolution resolution = new ScaledResolution(Minecraft.getMinecraft());
+        float screenWidth = (float) resolution.getScaledWidth_double();
+        float screenHeight = (float) resolution.getScaledHeight_double();
+        float posX = x / screenWidth * 2f - 1f;
+        float posY = 1f - y / screenHeight * 2f;
+        float _width = width / screenWidth * 2f;
+        float _height = height / screenHeight * -2f;
+
+        GL20.glUniform1f(posXLoc, posX);
+        GL20.glUniform1f(posYLoc, posY);
+        GL20.glUniform1f(widthLoc, _width);
+        GL20.glUniform1f(heightLoc, _height);
+
+        int texUnit = GL11C.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        GL13.glActiveTexture(GL13.GL_TEXTURE5);
+        int prevTex = GL11.glGetInteger(GL11.GL_TEXTURE_2D);
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, texId);
+        GL20.glUniform1i(atlasLoc, 5);
+
+        ImmediateClientServices.instance().dummyVao().bind();
+        GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6);
+        GL30.glBindVertexArray(0);
+
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, prevTex);
+        GL13.glActiveTexture(texUnit);
+
+        GL20.glUseProgram(prevProg);
+
+        hud.drawRectOutline(x, y, width, height, 0.5f, Color.RED.getRGB());
+    }
+
+    private static void drawChar(HUDContext hud, AlphaBitmap bitmap, float x, float y, float charSize) {
+        float ratio = charSize / bitmap.height();
+
+        drawBitmap(
+                hud,
+                hud.getTessellator(),
+                bitmap,
+                x,
+                y,
+                ratio);
     }
 
     private static float smoothStep(float edge0, float edge1, float x) {

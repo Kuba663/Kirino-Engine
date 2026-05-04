@@ -170,7 +170,9 @@ public class Texture2DAccessor extends TextureAccessorExt implements TextureAcce
         }
 
         @Override
-        public void resizeAndAlloc(int width, int height, @Nullable ByteBuffer byteBuffer) {
+        public void resizeAndAlloc(int width, int height, @NonNull ByteBuffer byteBuffer) {
+            Preconditions.checkNotNull(byteBuffer);
+
             MethodHolder.setExtentX(accessor.texture, width);
             MethodHolder.setExtentY(accessor.texture, height);
             TextureFormat format = MethodHolder.getCurrentFormat(accessor.texture);
@@ -182,7 +184,8 @@ public class Texture2DAccessor extends TextureAccessorExt implements TextureAcce
         }
 
         @Override
-        public void resizeAndAlloc(int width, int height, @Nullable ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+        public void resizeAndAlloc(int width, int height, @NonNull ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+            Preconditions.checkNotNull(byteBuffer);
             Preconditions.checkNotNull(format);
 
             MethodHolder.setExtentX(accessor.texture, width);
@@ -192,12 +195,15 @@ public class Texture2DAccessor extends TextureAccessorExt implements TextureAcce
         }
 
         @Override
-        public void alloc(boolean mutable, @Nullable ByteBuffer byteBuffer) {
+        public void alloc(boolean mutable, @NonNull ByteBuffer byteBuffer) {
+            Preconditions.checkNotNull(byteBuffer);
+
             alloc(mutable, byteBuffer, TextureFormat.RGBA8_UNORM);
         }
 
         @Override
-        public void alloc(boolean mutable, @Nullable ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+        public void alloc(boolean mutable, @NonNull ByteBuffer byteBuffer, @NonNull TextureFormat format) {
+            Preconditions.checkNotNull(byteBuffer);
             Preconditions.checkNotNull(format);
 
             MethodHolder.setCurrentFormat(accessor.texture, format);

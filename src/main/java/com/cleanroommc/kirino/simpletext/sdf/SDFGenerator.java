@@ -84,7 +84,7 @@ public class SDFGenerator {
                 }
 
                 int v = source.get(sourceY * width + sourceX) & 0xFF;
-                inside[index] = v > 0;
+                inside[index] = v > 127;
             }
         }
 
@@ -94,11 +94,9 @@ public class SDFGenerator {
         ByteBuffer out = MemoryUtil.memAlloc(size);
 
         float inv = 1f / (2f * spread);
-        float bias = bias(size, spread, distInside, distOutside);
 
         for (int i = 0; i < size; i++) {
             float d = distOutside[i] - distInside[i];
-            d -= bias;
             d = Math.max(-spread, Math.min(spread, d));
 
             float v = (d + spread) * inv;
@@ -111,22 +109,6 @@ public class SDFGenerator {
         currentBitmap = null;
 
         return new SDFBitmap(outWidth, outHeight, out);
-    }
-
-    private static float bias(int size, int spread, float[] distInside, float[] distOutside) {
-        float sum = 0;
-        int count = 0;
-
-        for (int i = 0; i < size; i++) {
-            float d = distOutside[i] - distInside[i];
-
-            if (Math.abs(d) < spread) {
-                sum += d;
-                count++;
-            }
-        }
-
-        return (count > 0) ? (sum / count) : 0f;
     }
 
     private static final float BIG_FLOAT = 1e20f;

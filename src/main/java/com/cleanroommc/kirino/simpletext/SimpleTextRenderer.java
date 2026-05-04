@@ -23,9 +23,6 @@ public class SimpleTextRenderer {
     public SimpleTextRenderer(ImmediateShaderAccess shaderAccess, FreeTypeManager freeTypeManager, ResourceLocation rl) {
         this.shaderAccess = shaderAccess;
         this.freeTypeManager = freeTypeManager;
-        face = freeTypeManager.load(rl, 0, 32);
-
-        Shader shader = shaderAccess.makeShader(new ResourceLocation("forge:shaders/font.vert"));
-        shaderAccess.submitToGL(shader);
+        face = freeTypeManager.load(rl, 0, 64);
     }
 }

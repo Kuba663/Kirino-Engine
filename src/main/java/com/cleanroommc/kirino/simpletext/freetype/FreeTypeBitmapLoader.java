@@ -14,7 +14,7 @@ public final class FreeTypeBitmapLoader {
     }
 
     /**
-     * <p>Note: Do not free the result.</p>
+     * <p>Note: Do not free the result manually. You're not responsible for closing it.</p>
      */
     @Nullable
     public static FT_Bitmap load(@NonNull FT_Face face, char c, int loadFlags) {

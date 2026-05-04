@@ -43,9 +43,7 @@ public class OpaqueTerrainPass extends Subpass {
         int tex = GL20.glGetUniformLocation(shaderProgram.getProgramID(), "tex");
 
         // test
-        int[] res = new int[1];
-        GL11C.glGetIntegerv(GL13.GL_ACTIVE_TEXTURE, res);
-        int texUnit = res[0];
+        int texUnit = GL11C.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
 
         GL13.glActiveTexture(GL13.GL_TEXTURE3);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D,
