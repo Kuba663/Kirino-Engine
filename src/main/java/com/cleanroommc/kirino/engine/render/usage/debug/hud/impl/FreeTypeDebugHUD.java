@@ -11,6 +11,7 @@ import com.cleanroommc.kirino.gl.texture.accessor.Texture2DAccessor;
 import com.cleanroommc.kirino.gl.texture.meta.FilterMode;
 import com.cleanroommc.kirino.gl.texture.meta.TextureFormat;
 import com.cleanroommc.kirino.gl.texture.meta.WrapMode;
+import com.cleanroommc.kirino.simpletext.SimpleTextRenderer;
 import com.cleanroommc.kirino.simpletext.freetype.AlphaBitmap;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapDecoder;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
@@ -117,7 +118,7 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
                     drawScale);
 
             if (sdfBitmap == null) {
-                SDFGenerator generator = new SDFGenerator(ImmediateClientServices.instance().text().getFreeTypeFace(), 9, 9);
+                SDFGenerator generator = new SDFGenerator(text().getFreeTypeFace(), 9, 9);
                 if (generator.tryLoadBitmap(inputChar)) {
                     sdfBitmap = generator.compute();
                 }
@@ -173,6 +174,17 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
 
     private static boolean shaderSetup = false;
     private static ShaderProgram shaderProgram;
+    private static SimpleTextRenderer textRenderer = null;
+
+    private static SimpleTextRenderer text() {
+        if (textRenderer == null) {
+            textRenderer = new SimpleTextRenderer(
+                    ImmediateClientServices.instance().shader(),
+                    ImmediateClientServices.instance().freetype(),
+                    new ResourceLocation("forge:fonts/jetbrains/jetbrains_mono_nl_regular.ttf"));
+        }
+        return textRenderer;
+    }
 
     private static void drawSdfChar(HUDContext hud, int texId, float x, float y, float width, float height) {
         if (!shaderSetup) {
@@ -346,7 +358,7 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
     @Nullable
     private static AlphaBitmap genBitmap(char c) {
         FT_Bitmap b = FreeTypeBitmapLoader.load(
-                ImmediateClientServices.instance().text().getFreeTypeFace(), c,
+                text().getFreeTypeFace(), c,
                 FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING);
 
         if (b == null) {

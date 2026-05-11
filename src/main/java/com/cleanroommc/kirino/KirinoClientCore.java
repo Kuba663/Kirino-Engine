@@ -71,6 +71,10 @@ public final class KirinoClientCore {
 
     private static boolean RENDER_UNSUPPORTED;
 
+    public static boolean isRenderUnsupported() {
+        return RENDER_UNSUPPORTED;
+    }
+
     //<editor-fold desc="static init">
     static {
         Constructor<DebugDataServiceLocator> debugServiceCtor;
@@ -87,10 +91,6 @@ public final class KirinoClientCore {
         RENDER_UNSUPPORTED = false;
     }
     //</editor-fold>
-
-    public static boolean isRenderUnsupported() {
-        return RENDER_UNSUPPORTED;
-    }
 
     //<editor-fold desc="vanilla source related patches">
     /**
@@ -519,6 +519,9 @@ public final class KirinoClientCore {
         LOGGER.info("---------- Kirino Client-Side Post-Initialization ----------");
 
         //<editor-fold desc="kirino engine">
+        // guarantee ImmediateClientServices initialization if it was not initialized
+        ImmediateClientServices ignore = ImmediateClientServices.instance();
+
         LOGGER.info("Post-Initializing Kirino Engine.");
         StopWatch stopWatch = StopWatch.createStarted();
 
