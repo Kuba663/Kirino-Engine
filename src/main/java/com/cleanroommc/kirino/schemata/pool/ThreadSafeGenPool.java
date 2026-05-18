@@ -17,7 +17,7 @@ public abstract class ThreadSafeGenPool<T> {
     private final int[] freeIndices;
     private int freeTop;
 
-    private final boolean[] lended;
+    private final boolean[] lent;
     private final Handle<T>[] handles;
 
     private final ReentrantLock lock = new ReentrantLock();
@@ -31,13 +31,13 @@ public abstract class ThreadSafeGenPool<T> {
         this.capacity = capacity;
         slots = (T[]) new Object[capacity];
         freeIndices = new int[capacity];
-        lended = new boolean[capacity];
+        lent = new boolean[capacity];
         handles = (Handle<T>[]) new Handle[capacity];
         for (int i = 0; i < capacity; i++) {
             handles[i] = new Handle<>(this, i);
             slots[i] = newObject(handles[i]);
             freeIndices[i] = i;
-            lended[i] = false;
+            lent[i] = false;
         }
         freeTop = capacity - 1;
         gen = 0;
@@ -62,13 +62,13 @@ public abstract class ThreadSafeGenPool<T> {
             gen++;
             freeTop = capacity - 1;
             for (int i = 0; i < capacity; i++) {
-                if (lended[i]) {
+                if (lent[i]) {
                     handles[i] = new Handle<>(this, i);
                     slots[i] = newObject(handles[i]);
                 } else {
                     handles[i].reset(gen);
                 }
-                lended[i] = false;
+                lent[i] = false;
                 freeIndices[i] = i;
             }
         } finally {
@@ -82,7 +82,7 @@ public abstract class ThreadSafeGenPool<T> {
         try {
             if (freeTop >= 0) {
                 int index = freeIndices[freeTop--];
-                lended[index] = true;
+                lent[index] = true;
                 Handle<T> handle = handles[index];
                 handle.reset(gen);
                 return slots[index];
@@ -121,7 +121,7 @@ public abstract class ThreadSafeGenPool<T> {
                     return;
                 }
                 recycled = true;
-                pool.lended[index] = false;
+                pool.lent[index] = false;
                 pool.freeIndices[++pool.freeTop] = index;
             } finally {
                 pool.lock.unlock();

@@ -38,7 +38,9 @@ public class SDFGenerator {
      * Call {@link #compute()} right after if it returns <code>true</code>.
      */
     public boolean tryLoadBitmap(char c) {
-        FT_Bitmap bitmap = FreeTypeBitmapLoader.load(face, c, FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING);
+        FT_Bitmap bitmap = FreeTypeBitmapLoader.load(
+                face, c,
+                FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING, null);
 
         if (bitmap == null) {
             return false;

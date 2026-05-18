@@ -11,7 +11,6 @@ import com.cleanroommc.kirino.gl.texture.accessor.Texture2DAccessor;
 import com.cleanroommc.kirino.gl.texture.meta.FilterMode;
 import com.cleanroommc.kirino.gl.texture.meta.TextureFormat;
 import com.cleanroommc.kirino.gl.texture.meta.WrapMode;
-import com.cleanroommc.kirino.simpletext.SimpleTextRenderer;
 import com.cleanroommc.kirino.simpletext.freetype.AlphaBitmap;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapDecoder;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
@@ -28,6 +27,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.opengl.*;
 import org.lwjgl.util.freetype.FT_Bitmap;
+import org.lwjgl.util.freetype.FT_Face;
 import org.lwjgl.util.freetype.FreeType;
 import org.lwjglx.input.Keyboard;
 
@@ -118,7 +118,7 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
                     drawScale);
 
             if (sdfBitmap == null) {
-                SDFGenerator generator = new SDFGenerator(text().getFreeTypeFace(), 9, 9);
+                SDFGenerator generator = new SDFGenerator(face(), 9, 9);
                 if (generator.tryLoadBitmap(inputChar)) {
                     sdfBitmap = generator.compute();
                 }
@@ -174,16 +174,16 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
 
     private static boolean shaderSetup = false;
     private static ShaderProgram shaderProgram;
-    private static SimpleTextRenderer textRenderer = null;
+    private static FT_Face freeTypeFace = null;
 
-    private static SimpleTextRenderer text() {
-        if (textRenderer == null) {
-            textRenderer = new SimpleTextRenderer(
-                    ImmediateClientServices.instance().shader(),
-                    ImmediateClientServices.instance().freetype(),
-                    new ResourceLocation("forge:fonts/jetbrains/jetbrains_mono_nl_regular.ttf"));
+    private static FT_Face face() {
+        if (freeTypeFace == null) {
+            freeTypeFace = ImmediateClientServices.instance().freetype().load(
+                    new ResourceLocation("forge:fonts/jetbrains/jetbrains_mono_nl_regular.ttf"),
+                    0,
+                    64);
         }
-        return textRenderer;
+        return freeTypeFace;
     }
 
     private static void drawSdfChar(HUDContext hud, int texId, float x, float y, float width, float height) {
@@ -358,8 +358,8 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
     @Nullable
     private static AlphaBitmap genBitmap(char c) {
         FT_Bitmap b = FreeTypeBitmapLoader.load(
-                text().getFreeTypeFace(), c,
-                FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING);
+                face(), c,
+                FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING, null);
 
         if (b == null) {
             return null;

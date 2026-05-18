@@ -84,7 +84,7 @@ public final class MinecraftResourceUtils {
     private static Boolean devEnv = null;
 
     /**
-     * @return Wether it is the Cleanroom dev env (not Cleanroom mod template but Cleanroom itself)
+     * @return Whether it is the Cleanroom dev env (not Cleanroom mod template but Cleanroom itself)
      */
     private static boolean isDevEnv() {
         if (devEnv != null) {
