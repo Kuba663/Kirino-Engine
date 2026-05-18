@@ -1,25 +1,38 @@
 
-# Kirino Engine <img src="logo.png" alt="logo" width="160" align="right" style="margin-left: 16px; vertical-align: middle;"/>
+# Kirino Engine (WIP) <img src="logo.png" alt="logo" width="160" align="right" style="margin-left: 16px; vertical-align: middle;"/>
 
 ![Platform](https://img.shields.io/badge/Platform-Minecraft%201.12.2-brightgreen.svg)
 ![Status](https://img.shields.io/badge/Status-WIP-yellow.svg)
 [![License](https://img.shields.io/badge/License-Custom%20(Mod%20Permissions)-orange.svg)](LICENSE)
 
-Kirino-Engine combines an ECS-based data-oriented architecture,
-explicit modern OpenGL abstractions,
-and a hybrid CPU-GPU rendering pipeline 
-to reimagine Minecraft's traditional, tightly coupled, and CPU-bound rendering.
+Minecraft rendering becomes difficult as implicit state and mixins couple rendering behavior.
+Our primary goal is to provide an explicit structure, overhaul most of Minecraft’s 
+rendering in a future-proof manner, and provide a set of advanced rendering APIs to mod developers.
 
-Its primary goal is to overhaul most of Minecraft’s rendering in a future-proof and elegant manner, 
-provide a set of clean rendering APIs to mod developers, 
-**_and_** serve as a platform for exploring the feasibility of modern, GPU-driven rendering techniques within Minecraft’s constraints.
+In terms of the **fundamental changes** we'd like to introduce:
 
-Looking further ahead, the long-term goal is to evolve into a general-purpose engine kernel for Minecraft,
-while keeping the main focus on rendering. To illustrate, we will pay more attention to lifecycles, phases, and systems, 
+- Introduce a set of engine infrastructure on top of Minecraft
+  - Enable less mixin work through explicit lifecycles and entrypoint
+  - Provide reusable services such as ECS, GL abstraction layer
+  
+- Replace direct GL draw calls by abstracted render commands and defer the rendering process
+  - No more concerns about the manual GL state management inside TESR/Entity/Item classes
+  - No more unbatched and unoptimized draw calls
+  - Deferred command execution allows _post_ render modification without mixins
+  
+- Modernize Minecraft rendering in general
+  - Introduce immutable pipeline to hide GL state mutability
+  - Introduce RenderPass/Subpass composition
+  - Introduce explicit resource lifetime to prevent hidden synchronization
+  
+- Implement a terrain rendering rewrite with meshlets
+  - Normal-based meshlet clustering creates foundation for better lighting, finer culling,
+    GPU acceleration, and future visibility buffer techniques
+
+Looking further ahead, we'd like to pay more attention to lifecycles, phases, and systems, 
 rather than features, compatibility with legacy solutions, or similar concerns.
 
 > The project is highly WIP - contributions are welcome to help accelerate development!<br>
-> Currently working on the terrain rendering pipeline.
 
 > Want a deeper look right away? Jump to "**How Everything Works?**"
 
@@ -31,52 +44,6 @@ rather than features, compatibility with legacy solutions, or similar concerns.
 - Not a high-fidelity path tracing solution
 
 > Jump to "**FAQs**" for more details
-
-## What This Project Provides?
-
-### 1) Engine-agnostic ECS framework
-
-<details>
-<summary>Click to Expand</summary>
-
-- Data-oriented SoA archetypes as the data model, 
-  designed for predictable memory layout
-- Strict separation of entity identity, component storage, and system execution
-- Designed to integrate with other data-oriented tech stacks like
-  job systems, execution graphs
-
-</details>
-
-### 2) Low-level OpenGL abstraction layer
-
-<details>
-<summary>Click to Expand</summary>
-
-The project provides a low-level, semantic abstraction layer over modern OpenGL.
-Rather than acting as a black-box wrapper, this layer aims to preserve the
-meaning of OpenGL operations, **_and_** explain the implicit and subtle assumptions clearly. (WIP; partially usable)
-
-You may find those abstractions handy if you know/use GL already.
-
-The goal of this layer is not to hide OpenGL, but to **clarify** it.
-
-</details>
-
-### 3) Rendering engine implementation
-
-<details>
-<summary>Click to Expand</summary>
-
-Building on the ECS framework and OpenGL abstraction, the project includes a
-concrete rendering engine implementation. (WIP)
-
-The engine is designed around a hybrid CPU-GPU pipeline, where high-level
-orchestration remains on the CPU while some jobs like culling, data processing are delegated to the GPU.
-
-> **Note**: Minecraft is mostly used as a data source and constraint, rather
-> than as a strict compatibility target.
-
-</details>
 
 ## Contributing
 If you would like to contribute, please take a look at our
@@ -93,7 +60,7 @@ To keep discussions productive, please read the guidelines below.
 Before proposing changes or opening discussions, please:
 
 - Treat/Assume the current design choices as intentional and valid start points
-  (that is, reason within the given assumption space; feel free to do contradictions)
+  (that is, reason within the given assumption space)
 - Base your reasoning on the assumptions implied by the existing docs
 - Focus on internal consistency, trade-offs, and constructive outcomes
 
@@ -119,26 +86,11 @@ These questions re-open foundational decisions **_without engaging with the proj
 If you believe core assumptions lead to issues,
 please demonstrate how it contradicts itself in this specific context.
 
-### Main idea & Notes
+### Main Idea
 
-We expect contributors to make sufficient assumptions and show valid reasonings.
-
-If the goal is to accelerate development, arguments should avoid:
-- Implicit equivalences
-- Unstated assumptions
-- Invalid inference steps
-
-_Clear reasoning is more valuable than confident conclusions._
-
-**_But_**, _please don’t feel discouraged if your reasoning isn’t formal.
+Please don’t feel discouraged if your reasoning isn’t formal.
 This project values thoughtful discussion. If an idea is
-proposed in good faith, incomplete and informal reasoning is still welcome._
-
-**Small reasoning notes**:
-- Showing that a design choice `A` is flawed does not imply that an alternative `B`
-  is therefore correct
-- Showing that a design choice `A` implies an alternative `B` does not guarantee
-  that rejecting `A` disqualifies `B`.
+proposed in good faith, incomplete and informal reasoning is still welcome.
 
 </details>
 
@@ -155,46 +107,32 @@ where you can understand our implicit assumptions and build the mental model gra
 <summary>Click to Expand</summary>
 
 - Why is Kirino-Engine different compared to OptiFine / Sodium / Iris?
-  - Because Kirino-Engine reimagines the entire rendering pipeline without patching things in an unmaintainable way
-  - Kirino-Engine is fundamentally GPU-driven and ECS-driven, unlike traditional optimizers or shader mods
-  - Kirino-Engine pays a huge attention to its architecture
-  - Kirino-Engine isn't merely an optimizer or shader mod — it's a research-oriented rendering engine
-  - See [Assumption Space](https://github.com/CleanroomMC/Kirino-Engine/blob/main/docs/assumptions.md) for detailed reasonings too
+  - Because Kirino-Engine wants to bring actual architectural level changes, and pays less attention to
+    optimization and _shaders_
 
 <br>
 
 - Will Kirino-Engine be compatible with OptiFine / Sodium / Iris?
   - No, because Kirino-Engine replaces the whole rendering pipeline
-  - _**But**_, Kirino-Engine isn't tightly coupled with rendering. 
-    You can try disabling the rendering part of the engine, and things might work
+  - _**But**_, Kirino-Engine isn't tightly coupled with rendering. A toggle is
+    provided to disable the rendering part of the engine
 
 <br>
 
-- What's the most exciting features in dev?
-  - GPU-Driven Meshlet Rendering
-  - Modern Rendering Paradigms (like Multi-Draw Indirect, Pipeline State Objects, etc.)
-  - Semi-Static Global Illumination Driven by Surface Cards & Temporal Accumulation
-  - ECS, Parallel Job, and Execution Graph (a Multithread-Friendly Architecture)
-  - Async GPU Resource System
-  - Multi-resolution & HDR & Post-processing Pipeline
-
-<br>
-
-- What can I _expect_ as a player?
-  - Performance wise: smoother performance and FPS improvements; Higher CPU & GPU utilization
+- What can I _expect_ as a player when it's out?
+  - Performance wise: potentially smoother performance and FPS improvements
   - Shader wise: modern lighting techniques and better global illumination
   - Configurability: optional HDR, optional resolution up-scaling or down-scaling, optional post-processing, etc.
   - Ecosystem: easily extensible rendering pipeline for community mods and shaders
 
 <br>
 
-- What can I _expect_ as a mod developer?
+- What can I _expect_ as a mod developer when it's out?
   - Clean rendering APIs that hide OpenGL completely
   - Versatile rendering APIs that focus on the concept of render commands
   - Constrained and explicit engine lifecycle
   - ECS runtime
-  - Will be able to create emissive blocks, PBR, fogs, decals, any post-processing effects
-  - Future-proof architecture
+  - Features like emissive blocks, PBR, fogs, decals, screen post-processing
 
 </details>
 
