@@ -1,6 +1,5 @@
 package com.cleanroommc.kirino.schemata.arena;
 
-import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
@@ -89,14 +88,10 @@ public final class SoAArena {
         }
 
         public float get(int index) {
-            Preconditions.checkElementIndex(index, data.length);
-
             return data[index];
         }
 
         public void set(int index, float value) {
-            Preconditions.checkElementIndex(index, data.length);
-
             data[index] = value;
         }
 
@@ -115,14 +110,10 @@ public final class SoAArena {
         }
 
         public int get(int index) {
-            Preconditions.checkElementIndex(index, data.length);
-
             return data[index];
         }
 
         public void set(int index, int value) {
-            Preconditions.checkElementIndex(index, data.length);
-
             data[index] = value;
         }
 
@@ -141,14 +132,10 @@ public final class SoAArena {
         }
 
         public long get(int index) {
-            Preconditions.checkElementIndex(index, data.length);
-
             return data[index];
         }
 
         public void set(int index, long value) {
-            Preconditions.checkElementIndex(index, data.length);
-
             data[index] = value;
         }
 
@@ -167,14 +154,10 @@ public final class SoAArena {
         }
 
         public boolean get(int index) {
-            Preconditions.checkElementIndex(index, data.length);
-
             return data[index];
         }
 
         public void set(int index, boolean value) {
-            Preconditions.checkElementIndex(index, data.length);
-
             data[index] = value;
         }
 
