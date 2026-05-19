@@ -6,8 +6,8 @@ import com.cleanroommc.kirino.gl.buffer.view.VBOView;
 import com.cleanroommc.kirino.gl.vao.VAO;
 import com.cleanroommc.kirino.gl.vao.attribute.AttributeLayout;
 import com.cleanroommc.kirino.gl.vao.attribute.Stride;
+import com.cleanroommc.kirino.simpletext.TextContext;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeManager;
-import com.cleanroommc.kirino.simpletext.TextProducer;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
@@ -27,7 +27,7 @@ public final class ImmediateClientServices {
         freeTypeManager = MethodHolder.newFreeTypeManager();
         freeTypeManager.init();
 
-        textRenderer = new TextProducer(
+        textContext = new TextContext(
                 freeTypeManager,
                 new ResourceLocation("forge:fonts/jetbrains/jetbrains_mono_nl_regular.ttf"));
 
@@ -40,7 +40,7 @@ public final class ImmediateClientServices {
 
     private final ImmediateShaderAccess shaderAccess;
     private final FreeTypeManager freeTypeManager;
-    private final TextProducer textRenderer;
+    private final TextContext textContext;
     private final VAO dummyVao;
 
     public ImmediateShaderAccess shader() {
@@ -51,8 +51,8 @@ public final class ImmediateClientServices {
         return freeTypeManager;
     }
 
-    public TextProducer text() {
-        return textRenderer;
+    public TextContext text() {
+        return textContext;
     }
 
     public VAO dummyVao() {

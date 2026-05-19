@@ -1,4 +1,4 @@
-package com.cleanroommc.kirino.simpletext.backend;
+package com.cleanroommc.kirino.simpletext;
 
 import com.cleanroommc.kirino.simpletext.command.TextCommandList;
 
