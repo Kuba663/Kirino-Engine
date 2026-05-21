@@ -1,5 +1,6 @@
 package com.cleanroommc.kirino.simpletext.glyph;
 
+import com.cleanroommc.kirino.simpletext.SimpleTextConstants;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
@@ -44,7 +45,7 @@ public class GlyphMetricsStore {
         FreeTypeBitmapLoader.loadGlyph(
                 face,
                 glyphIndex,
-                FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING,
+                SimpleTextConstants.LOAD_FLAGS,
                 metrics);
 
         if (metrics.isEmpty()) {
@@ -52,6 +53,8 @@ public class GlyphMetricsStore {
                     "Load glyph metrics failed (fontRl=%s, glyphIndex=%d).",
                     fontRl.toString(), glyphIndex));
         }
+
+        metrics.setSdf(SimpleTextConstants.SDF_PADDING);
 
         return metrics;
     }

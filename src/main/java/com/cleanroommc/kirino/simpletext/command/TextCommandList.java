@@ -1,5 +1,7 @@
 package com.cleanroommc.kirino.simpletext.command;
 
+import org.jspecify.annotations.NonNull;
+
 /**
  * <p>Note: {@link TextCommandList} must be owned by a {@link org.lwjgl.util.freetype.FT_Face} owner,
  * so <code>glyphIndex</code> therefore makes sense with a given font face.</p>
@@ -23,13 +25,15 @@ public final class TextCommandList {
     /**
      * Push a missing glyph draw command (<code>glyphIndex</code> == 0 to be exact).
      */
-    public void push(float x, float y) {
+    public void push(float x, float y, float width, float height) {
         int i = arena.alloc();
 
         arena.glyphIndex.set(i, 0);
 
         arena.x.set(i, x);
         arena.y.set(i, y);
+        arena.width.set(i, width);
+        arena.height.set(i, height);
     }
 
     /**
@@ -38,10 +42,8 @@ public final class TextCommandList {
     public void push(
             int glyphIndex,
             float x, float y,
-            float u0, float v0,
-            float u1, float v1,
+            float width, float height,
             float size,
-            int page,
             int color,
             int hint) {
 
@@ -51,16 +53,10 @@ public final class TextCommandList {
 
         arena.x.set(i, x);
         arena.y.set(i, y);
-
-        arena.u0.set(i, u0);
-        arena.v0.set(i, v0);
-
-        arena.u1.set(i, u1);
-        arena.v1.set(i, v1);
+        arena.width.set(i, width);
+        arena.height.set(i, height);
 
         arena.size.set(i, size);
-
-        arena.page.set(i, page);
 
         arena.color.set(i, color);
         arena.hint.set(i, hint);
@@ -78,31 +74,41 @@ public final class TextCommandList {
         return arena.y.get(i);
     }
 
-    public float u0(int i) {
-        return arena.u0.get(i);
+    public float width(int i) {
+        return arena.width.get(i);
     }
 
-    public float v0(int i) {
-        return arena.v0.get(i);
-    }
-
-    public float u1(int i) {
-        return arena.u1.get(i);
-    }
-
-    public float v1(int i) {
-        return arena.v1.get(i);
+    public float height(int i) {
+        return arena.height.get(i);
     }
 
     public float size(int i) {
         return arena.size.get(i);
     }
 
-    public int page(int i) {
-        return arena.page.get(i);
-    }
-
     public int color(int i) {
         return arena.color.get(i);
+    }
+
+    public int hint(int i) {
+        return arena.hint.get(i);
+    }
+
+    @NonNull
+    public TextCommandList copy() {
+        int size = size();
+        TextCommandList copy = new TextCommandList(size + 1);
+        for (int i = 0; i < size; i++) {
+            copy.arena.alloc();
+            copy.arena.glyphIndex.set(i, this.arena.glyphIndex.get(i));
+            copy.arena.x.set(i, this.arena.x.get(i));
+            copy.arena.y.set(i, this.arena.y.get(i));
+            copy.arena.width.set(i, this.arena.width.get(i));
+            copy.arena.height.set(i, this.arena.height.get(i));
+            copy.arena.size.set(i, this.arena.size.get(i));
+            copy.arena.color.set(i, this.arena.color.get(i));
+            copy.arena.hint.set(i, this.arena.hint.get(i));
+        }
+        return copy;
     }
 }

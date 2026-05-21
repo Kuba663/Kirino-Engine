@@ -392,20 +392,32 @@ public abstract class AbstractPagedAtlas<TPage, TBitmap extends SimpleTextBitmap
             return page;
         }
 
+        /**
+         * It will shrink UV by 0.5 pixel and then compute.
+         */
         public float u0(int pageWidth) {
-            return (float) x / pageWidth;
+            return (x + 0.5f) / pageWidth;
         }
 
+        /**
+         * It will shrink UV by 0.5 pixel and then compute.
+         */
         public float v0(int pageHeight) {
-            return (float) y / pageHeight;
+            return (y + 0.5f) / pageHeight;
         }
 
+        /**
+         * It will shrink UV by 0.5 pixel and then compute.
+         */
         public float u1(int pageWidth) {
-            return (float) (x + width) / pageWidth;
+            return (x + width - 0.5f) / pageWidth;
         }
 
+        /**
+         * It will shrink UV by 0.5 pixel and then compute.
+         */
         public float v1(int pageHeight) {
-            return (float) (y + height) / pageHeight;
+            return (y + height - 0.5f) / pageHeight;
         }
 
         public void setReleaseCallback(@NonNull Consumer<SlotHandle<T>> callback) {

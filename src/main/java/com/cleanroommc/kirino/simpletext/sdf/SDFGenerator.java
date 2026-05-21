@@ -1,25 +1,18 @@
 package com.cleanroommc.kirino.simpletext.sdf;
 
 import com.cleanroommc.kirino.simpletext.freetype.AlphaBitmap;
-import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapDecoder;
-import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
 import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;
 import org.lwjgl.system.MemoryUtil;
-import org.lwjgl.util.freetype.FT_Bitmap;
-import org.lwjgl.util.freetype.FT_Face;
-import org.lwjgl.util.freetype.FreeType;
 
 import java.nio.ByteBuffer;
 
 public class SDFGenerator {
 
-    private final FT_Face face;
     private final int padding;
     private final int spread;
 
-    public SDFGenerator(@NonNull FT_Face face, int padding, int spread) {
-        Preconditions.checkNotNull(face);
+    public SDFGenerator(int padding, int spread) {
         Preconditions.checkArgument(padding > 0,
                 "Padding=%s must be positive.", padding);
         Preconditions.checkArgument(spread > 0,
@@ -27,44 +20,20 @@ public class SDFGenerator {
         Preconditions.checkArgument(padding >= spread,
                 "Padding=%s must be greater or equal to spread=%s.", padding, spread);
 
-        this.face = face;
         this.padding = padding;
         this.spread = spread;
     }
 
-    private AlphaBitmap currentBitmap = null;
-
     /**
-     * Call {@link #compute()} right after if it returns <code>true</code>.
-     */
-    public boolean tryLoadBitmap(char c) {
-        FT_Bitmap bitmap = FreeTypeBitmapLoader.load(
-                face, c,
-                FreeType.FT_LOAD_RENDER | FreeType.FT_LOAD_NO_HINTING, null);
-
-        if (bitmap == null) {
-            return false;
-        }
-
-        try {
-            currentBitmap = FreeTypeBitmapDecoder.decode(bitmap);
-            return true;
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    /**
-     * Call <code>compute</code> right after a successful {@link #tryLoadBitmap(char)}, and the
-     * loaded underlying bitmap will be freed too.
-     *
      * <p>Note: {@link SDFBitmap} must be freed later.</p>
+     * <p>Note: This method will not free the input <code>bitmap</code>.</p>
      */
-    public SDFBitmap compute() {
-        Preconditions.checkNotNull(currentBitmap, "Bitmap must be non-null.");
+    @NonNull
+    public SDFBitmap compute(@NonNull AlphaBitmap bitmap) {
+        Preconditions.checkNotNull(bitmap, "Bitmap must be non-null.");
 
-        int width = currentBitmap.width();
-        int height = currentBitmap.height();
+        int width = bitmap.width();
+        int height = bitmap.height();
 
         int outWidth = width + padding * 2;
         int outHeight = height + padding * 2;
@@ -72,7 +41,7 @@ public class SDFGenerator {
 
         boolean[] inside = new boolean[size];
 
-        ByteBuffer source = currentBitmap.byteBuffer();
+        ByteBuffer source = bitmap.byteBuffer();
 
         for (int y = 0; y < outHeight; y++) {
             for (int x = 0; x < outWidth; x++) {
@@ -106,9 +75,6 @@ public class SDFGenerator {
 
             out.put(i, (byte) (iv & 0xFF));
         }
-
-        currentBitmap.close();
-        currentBitmap = null;
 
         return new SDFBitmap(outWidth, outHeight, out);
     }

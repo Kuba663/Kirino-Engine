@@ -19,6 +19,7 @@ import com.cleanroommc.kirino.engine.render.usage.SceneViewState;
 import com.cleanroommc.kirino.engine.render.usage.debug.data.impl.MeshletGpuTimeline;
 import com.cleanroommc.kirino.engine.render.usage.debug.hud.impl.FreeTypeDebugHUD;
 import com.cleanroommc.kirino.engine.render.usage.debug.hud.impl.MeshletGpuTimelineHUD;
+import com.cleanroommc.kirino.engine.render.usage.debug.hud.impl.SimpleTextDebugHUD;
 import com.cleanroommc.kirino.engine.render.usage.task.job.*;
 import com.cleanroommc.kirino.gl.GLDeviceInfo;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
@@ -573,6 +574,7 @@ public final class KirinoClientCore {
         event.register(new CommonStatsHUD());
         event.register(new MeshletGpuTimelineHUD());
         event.register(new FreeTypeDebugHUD());
+        event.register(new SimpleTextDebugHUD());
     }
 
     //<editor-fold desc="reflection">

@@ -33,7 +33,9 @@ public final class FreeTypeBitmapDecoder {
         int absPitch = Math.abs(pitch);
 
         ByteBuffer source = bitmap.buffer(absPitch * height);
-        Preconditions.checkNotNull(source, "FT_Bitmap.buffer is null.");
+        if (source == null) {
+            throw new UnsupportedOperationException("FT_Bitmap.buffer is null. Unsupported.");
+        }
 
         if (pixelMode == FreeType.FT_PIXEL_MODE_GRAY) {
             ByteBuffer dest = MemoryUtil.memAlloc(width * height);

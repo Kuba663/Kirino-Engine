@@ -38,7 +38,7 @@ public class Slot {
     }
 
     public Slot(Type type, int count) {
-        Preconditions.checkArgument(!(count < 0 || count > 4), "Component count cannot be less than 0 or greater than 4.");
+        Preconditions.checkArgument(!(count <= 0 || count > 4), "Component count cannot no greater than 0 or greater than 4.");
 
         this.type = type;
         this.count = count;

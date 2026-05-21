@@ -2,14 +2,17 @@ package com.cleanroommc.kirino.simpletext.atlas;
 
 import com.cleanroommc.kirino.gl.texture.GLTexture;
 import com.cleanroommc.kirino.gl.texture.accessor.Texture2DAccessor;
+import com.cleanroommc.kirino.gl.texture.meta.FilterMode;
 import com.cleanroommc.kirino.gl.texture.meta.TextureFormat;
+import com.cleanroommc.kirino.gl.texture.meta.WrapMode;
 import com.cleanroommc.kirino.simpletext.sdf.SDFBitmap;
 import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;
+import org.lwjgl.opengl.GL11;
 
-public class GlyphAtlas extends AbstractPagedAtlas<Texture2DAccessor, SDFBitmap> {
+public class Tex2DGlyphAtlas extends AbstractPagedAtlas<Texture2DAccessor, SDFBitmap> {
 
-    public GlyphAtlas(int pageWidth, int pageHeight) {
+    public Tex2DGlyphAtlas(int pageWidth, int pageHeight) {
         super(() -> new Texture2DAccessor(true, GLTexture.newDsaTex2D(pageWidth, pageHeight)),
                 pageWidth, pageHeight);
     }
@@ -19,6 +22,7 @@ public class GlyphAtlas extends AbstractPagedAtlas<Texture2DAccessor, SDFBitmap>
         Preconditions.checkNotNull(page);
 
         page.highlevel().allocEmpty(false, TextureFormat.R8_UNORM);
+        page.setCommonParams(FilterMode.LINEAR, FilterMode.LINEAR, WrapMode.CLAMP_TO_EDGE, WrapMode.CLAMP_TO_EDGE);
     }
 
     @Override
@@ -30,6 +34,7 @@ public class GlyphAtlas extends AbstractPagedAtlas<Texture2DAccessor, SDFBitmap>
         Preconditions.checkArgument(slot.getHeight() == bitmap.height(),
                 "Slot height=%s must match bitmap height=%s.", slot.getHeight(), bitmap.height());
 
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
         slot.getPage().texSubImage2D(
                 0,
                 slot.getX(),
@@ -39,5 +44,6 @@ public class GlyphAtlas extends AbstractPagedAtlas<Texture2DAccessor, SDFBitmap>
                 TextureFormat.R8_UNORM.format,
                 TextureFormat.R8_UNORM.type,
                 bitmap.byteBuffer());
+        GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
     }
 }

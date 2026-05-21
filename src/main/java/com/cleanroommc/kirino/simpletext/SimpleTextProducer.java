@@ -10,24 +10,53 @@ import org.lwjgl.system.MemoryStack;
 import org.lwjgl.util.freetype.FT_Vector;
 import org.lwjgl.util.freetype.FreeType;
 
+import java.awt.*;
+import java.util.function.IntConsumer;
+
+/**
+ * The whole "canvas" uses the top-left pivot coordinate system,
+ * so do the individual glyphs.
+ *
+ * @see <a href="https://freetype.org/freetype2/docs/glyphs/glyph-metrics-3.svg">Glyph metrics explanation</a>
+ */
 public class SimpleTextProducer {
 
     /**
-     * <p>Unit: ?</p>
+     * <p>Unit: Minecraft scaled resolution</p>
      */
-    private final static int MISSING_GLYPH_ADV_X = 12;
+    private final static int GLYPH_SIZE = 12;
 
-    private final SimpleTextContext context;
+    /**
+     * <p>Unit: Minecraft scaled resolution</p>
+     */
+    private final static int MISSING_GLYPH_SIZE = 12;
 
+    private final SimpleTextRuntime context;
+    private final int pixelSize;
     private final TextCommandList cmdList = new TextCommandList(1024);
 
     private boolean batching;
 
+    /**
+     * <p>Unit: Minecraft scaled resolution</p>
+     */
     private float penX;
+
+    /**
+     * <p>Unit: Minecraft scaled resolution</p>
+     */
     private float penY;
 
-    public SimpleTextProducer(SimpleTextContext context) {
+    public SimpleTextProducer(SimpleTextRuntime context, int pixelSize) {
         this.context = context;
+        this.pixelSize = pixelSize;
+    }
+
+    /**
+     * @return Pixel -> Minecraft scaled resolution
+     */
+    private float pixel2screen(float pixel) {
+        return (pixel / (float) pixelSize) * GLYPH_SIZE;
     }
 
     /**
@@ -55,8 +84,8 @@ public class SimpleTextProducer {
                 float advanceX = vector.x() / 64f;
                 float advanceY = vector.y() / 64f;
 
-                penX += advanceX;
-                penY += advanceY;
+                penX += pixel2screen(advanceX);
+                penY += pixel2screen(advanceY);
             }
         }
     }
@@ -78,11 +107,23 @@ public class SimpleTextProducer {
         batching = false;
     }
 
-    public void append(String text, float x, float y, float fontSize) {
+    public void append(String text, float x, float y) {
         Preconditions.checkState(batching, "Must be batching already.");
 
         penX = x;
         penY = y;
+
+        final float[] lineHeight = {-1f};
+
+        (new CodepointIterator(text)).forEachRemaining((IntConsumer) (codepoint) -> {
+            int glyph = FreeTypeBitmapLoader.getGlyphIndex(context.getFontFace(), codepoint);
+            if (glyph == 0) {
+                return;
+            }
+
+            GlyphMetrics metrics = context.getGlyphMetrics(glyph);
+            lineHeight[0] = Math.max(lineHeight[0], pixel2screen(metrics.getBearingY()));
+        });
 
         int prevGlyph = 0;
 
@@ -92,20 +133,33 @@ public class SimpleTextProducer {
             int codepoint = iterator.nextInt();
             int glyph = FreeTypeBitmapLoader.getGlyphIndex(context.getFontFace(), codepoint);
 
+            float topY = penY;
+            float baselineY = topY + lineHeight[0];
+
             if (glyph == 0) {
-                cmdList.push(penX, penY);
-                penX += MISSING_GLYPH_ADV_X;
+                cmdList.push(penX, baselineY - MISSING_GLYPH_SIZE, MISSING_GLYPH_SIZE, MISSING_GLYPH_SIZE);
+                penX += MISSING_GLYPH_SIZE;
             } else {
                 if (context.hasFontKerning()) {
                     kerning(prevGlyph, glyph);
                 }
-                // todo: load metrics + reserve atlas
-                GlyphMetrics metrics = context.getMetrics(glyph);
 
-//                cmdList.push(
-//                        glyph,
-//                        penX, penY,);
-//                penX += ;
+                GlyphMetrics metrics = context.getGlyphMetrics(glyph);
+
+                // bottom-left corner
+                float drawX = penX + pixel2screen(metrics.getBearingX() - metrics.getSdfPadding());
+                float drawY = baselineY + pixel2screen(metrics.getGlyphHeight() - metrics.getBearingY() + metrics.getSdfPadding()) - pixel2screen(metrics.getGlyphHeight());
+
+                cmdList.push(
+                        glyph,
+                        drawX, drawY,
+                        pixel2screen(metrics.getSdfWidth()),
+                        pixel2screen(metrics.getSdfHeight()),
+                        1f,
+                        Color.WHITE.getRGB(),
+                        0);
+
+                penX += pixel2screen(metrics.getAdvanceX());
             }
 
             prevGlyph = glyph;

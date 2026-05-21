@@ -118,57 +118,53 @@ public class FreeTypeDebugHUD implements ImmediateHUD {
                     drawScale);
 
             if (sdfBitmap == null) {
-                SDFGenerator generator = new SDFGenerator(face(), 9, 9);
-                if (generator.tryLoadBitmap(inputChar)) {
-                    sdfBitmap = generator.compute();
-                }
+                SDFGenerator generator = new SDFGenerator(9, 9);
+                sdfBitmap = generator.compute(bitmap);
             }
 
-            if (sdfBitmap != null) {
-                drawSdfBitmap(
-                        hud,
-                        hud.getTessellator(),
-                        sdfBitmap,
-                        hud.getPivotX() + bitmap.width() * drawScale,
-                        hud.getPivotY(),
-                        drawScale);
+            drawSdfBitmap(
+                    hud,
+                    hud.getTessellator(),
+                    sdfBitmap,
+                    hud.getPivotX() + bitmap.width() * drawScale,
+                    hud.getPivotY(),
+                    drawScale);
 
-                if (texCacheTarget == null || texCacheTarget != inputChar) {
-                    charTex2D = new Texture2DAccessor(true, GLTexture.newDsaTex2D(sdfBitmap.width(), sdfBitmap.height()));
+            if (texCacheTarget == null || texCacheTarget != inputChar) {
+                charTex2D = new Texture2DAccessor(true, GLTexture.newDsaTex2D(sdfBitmap.width(), sdfBitmap.height()));
 
-                    GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
-                    charTex2D.highlevel().alloc(false, sdfBitmap.byteBuffer(), TextureFormat.R8_UNORM);
-                    GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
+                GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 1);
+                charTex2D.highlevel().alloc(false, sdfBitmap.byteBuffer(), TextureFormat.R8_UNORM);
+                GL11.glPixelStorei(GL11.GL_UNPACK_ALIGNMENT, 4);
 
-                    charTex2D.setCommonParams(FilterMode.LINEAR, FilterMode.LINEAR, WrapMode.CLAMP_TO_EDGE, WrapMode.CLAMP_TO_EDGE);
+                charTex2D.setCommonParams(FilterMode.LINEAR, FilterMode.LINEAR, WrapMode.CLAMP_TO_EDGE, WrapMode.CLAMP_TO_EDGE);
 
-                    texCacheTarget = inputChar;
-                }
-
-                if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
-                    charSize++;
-                } else if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
-                    charSize--;
-                }
-
-                charSize = Math.min(50, Math.max(10, charSize));
-
-                float sdfCharWidth = (float) sdfBitmap.width() / sdfBitmap.height() * charSize;
-                drawSdfChar(
-                        hud,
-                        charTex2D.textureID(),
-                        hud.getPivotX() + bitmap.width() * drawScale + sdfBitmap.width() * drawScale,
-                        hud.getPivotY(),
-                        sdfCharWidth,
-                        charSize);
-
-                drawChar(
-                        hud,
-                        bitmap,
-                        hud.getPivotX() + bitmap.width() * drawScale + sdfBitmap.width() * drawScale + sdfCharWidth,
-                        hud.getPivotY(),
-                        charSize);
+                texCacheTarget = inputChar;
             }
+
+            if (Keyboard.isKeyDown(Keyboard.KEY_UP)) {
+                charSize++;
+            } else if (Keyboard.isKeyDown(Keyboard.KEY_DOWN)) {
+                charSize--;
+            }
+
+            charSize = Math.min(50, Math.max(10, charSize));
+
+            float sdfCharWidth = (float) sdfBitmap.width() / sdfBitmap.height() * charSize;
+            drawSdfChar(
+                    hud,
+                    charTex2D.textureID(),
+                    hud.getPivotX() + bitmap.width() * drawScale + sdfBitmap.width() * drawScale,
+                    hud.getPivotY(),
+                    sdfCharWidth,
+                    charSize);
+
+            drawChar(
+                    hud,
+                    bitmap,
+                    hud.getPivotX() + bitmap.width() * drawScale + sdfBitmap.width() * drawScale + sdfCharWidth,
+                    hud.getPivotY(),
+                    charSize);
         }
     }
 

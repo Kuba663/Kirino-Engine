@@ -160,8 +160,8 @@ public class KirinoEngine {
         ForkJoinPool systemPool = ForkJoinPoolUtils.newWorkStealingPool("KirinoMinecraftSystem");
 
         ShutdownManager.registerAsync(() -> {
-            ForkJoinPoolUtils.shutdownPool(systemFlowPool);
-            ForkJoinPoolUtils.shutdownPool(systemPool);
+            ForkJoinPoolUtils.shutdownPool(systemFlowPool, 5);
+            ForkJoinPoolUtils.shutdownPool(systemPool, 5);
         });
 
         MinecraftScene scene = new MinecraftScene(

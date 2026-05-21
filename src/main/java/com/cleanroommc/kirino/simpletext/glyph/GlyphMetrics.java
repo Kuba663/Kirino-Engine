@@ -97,7 +97,7 @@ public final class GlyphMetrics {
         empty = false;
 
         sdfWidth = glyphWidth + sdfPadding * 2;
-        sdfHeight = glyphHeight * sdfPadding * 2;
+        sdfHeight = glyphHeight + sdfPadding * 2;
         this.sdfPadding = sdfPadding;
     }
 

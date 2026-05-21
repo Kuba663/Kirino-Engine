@@ -35,10 +35,6 @@ public class VAO extends GLDisposable {
      * and <code>bind(0)</code> will be called on <code>vao</code>.
      *
      * <p>Only initialize VAO during the initial setup or early preparation stage of each frame.</p>
-     *
-     * @param attributeLayout Must pass an attribute layout, even an empty one
-     * @param eboView The nullable ebo (<code>eboView</code> and <code>vboViews</code> must both be null if one is null)
-     * @param vboViews The nullable vbos (<code>eboView</code> and <code>vboViews</code> must both be null if one is null; <code>vboViews</code> can't be empty if non-null)
      */
     public VAO(@NonNull AttributeLayout attributeLayout, @Nullable EBOView eboView, @NonNull VBOView @Nullable ... vboViews) {
         Preconditions.checkNotNull(attributeLayout);
@@ -47,10 +43,6 @@ public class VAO extends GLDisposable {
             for (VBOView vbo : vboViews) {
                 Preconditions.checkNotNull(vbo);
             }
-        }
-        if (eboView == null || vboViews == null) {
-            Preconditions.checkArgument(eboView == null, "Argument \"eboView\" must be null when \"vboViews\" is null.");
-            Preconditions.checkArgument(vboViews == null, "Argument \"vboViews\" must be null when \"eboView\" is null.");
         }
 
         vaoID = GL30.glGenVertexArrays();
