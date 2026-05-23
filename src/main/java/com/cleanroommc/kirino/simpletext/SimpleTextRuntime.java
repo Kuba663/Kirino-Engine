@@ -1,25 +1,23 @@
 package com.cleanroommc.kirino.simpletext;
 
 import com.cleanroommc.kirino.engine.render.core.shader.ImmediateShaderAccess;
-import com.cleanroommc.kirino.simpletext.atlas.Tex2DGlyphAtlas;
-import com.cleanroommc.kirino.simpletext.backend.DebugTextRenderer;
-import com.cleanroommc.kirino.simpletext.backend.FreeTypeTextProducer;
 import com.cleanroommc.kirino.simpletext.command.TextCommandList;
 import com.cleanroommc.kirino.simpletext.glyph.GlyphMetrics;
 import com.cleanroommc.kirino.simpletext.glyph.GlyphMetricsStore;
-import com.cleanroommc.kirino.simpletext.sdf.SDFGenerator;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class SimpleTextRuntime {
 
     private final ResourceLocation fontRl;
     private final ST_FontObject font;
     private final ST_Config config;
+    private final ImmediateShaderAccess shaderAccess;
 
     public ResourceLocation getFontRl() {
         return fontRl;
@@ -33,15 +31,28 @@ public class SimpleTextRuntime {
         return config;
     }
 
+    public ImmediateShaderAccess getShaderAccess() {
+        return shaderAccess;
+    }
+
     private final GlyphMetricsStore metricsStore;
     private final SimpleTextConsumer textConsumer;
     private final SimpleTextProducer textProducer;
 
     public SimpleTextRuntime(
-            BiFunction<ResourceLocation, ST_Config, ST_FontObject> fontFactory,
-            ImmediateShaderAccess shaderAccess,
-            ST_Config config,
-            ResourceLocation fontRl) {
+            @NonNull BiFunction<ResourceLocation, ST_Config, ST_FontObject> fontFactory,
+            @NonNull Function<SimpleTextRuntime, SimpleTextConsumer> consumerFactory,
+            @NonNull Function<SimpleTextRuntime, SimpleTextProducer> producerFactory,
+            @NonNull ImmediateShaderAccess shaderAccess,
+            @NonNull ST_Config config,
+            @NonNull ResourceLocation fontRl) {
+
+        Preconditions.checkNotNull(fontFactory);
+        Preconditions.checkNotNull(consumerFactory);
+        Preconditions.checkNotNull(producerFactory);
+        Preconditions.checkNotNull(shaderAccess);
+        Preconditions.checkNotNull(config);
+        Preconditions.checkNotNull(fontRl);
 
         this.fontRl = fontRl;
         this.config = config;
@@ -51,20 +62,18 @@ public class SimpleTextRuntime {
                 "Backend must match. Font backend type=%s but config backend target=%s.",
                 font.type().toString(), config.target().toString());
 
+        this.shaderAccess = shaderAccess;
+
         metricsStore = new GlyphMetricsStore(config);
+
+        textConsumer = consumerFactory.apply(this);
+        textProducer = producerFactory.apply(this);
 
 //        int[] outParallelism = new int[1];
 //        ForkJoinPool workerPool = ForkJoinPoolUtils.newWorkStealingPool("KirinoSimpleTextSDF", outParallelism);
 //        ShutdownManager.registerAsync(() -> ForkJoinPoolUtils.shutdownPool(workerPool, 5));
 //        SDFGeneratorPool generatorPool = new SDFGeneratorPool(outParallelism[0], () ->
 //                new SDFGenerator(SimpleTextConstants.SDF_PADDING, SimpleTextConstants.SDF_SPREAD));
-
-        textConsumer = new DebugTextRenderer(
-                this,
-                new SDFGenerator(config.sdfPadding(), config.sdfSpread()),
-                new Tex2DGlyphAtlas(1024, 1024),
-                shaderAccess);
-        textProducer = new FreeTypeTextProducer(this, config.pixelSize());
     }
 
     /**

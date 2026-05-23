@@ -9,8 +9,12 @@ import com.cleanroommc.kirino.gl.vao.attribute.Stride;
 import com.cleanroommc.kirino.simpletext.ST_Config;
 import com.cleanroommc.kirino.simpletext.ST_FontBackendType;
 import com.cleanroommc.kirino.simpletext.SimpleTextRuntime;
+import com.cleanroommc.kirino.simpletext.atlas.Tex2DGlyphAtlas;
+import com.cleanroommc.kirino.simpletext.backend.DebugTextRenderer;
 import com.cleanroommc.kirino.simpletext.backend.FreeTypeFontObject;
+import com.cleanroommc.kirino.simpletext.backend.FreeTypeTextProducer;
 import com.cleanroommc.kirino.simpletext.freetype.FreeTypeManager;
+import com.cleanroommc.kirino.simpletext.sdf.SDFGenerator;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
@@ -42,6 +46,16 @@ public final class ImmediateClientServices {
                 (rl, cfg) -> {
                     FT_Face face = freeTypeManager.load(rl, 0, cfg.pixelSize());
                     return new FreeTypeFontObject(face);
+                },
+                (context) -> {
+                    return new DebugTextRenderer(
+                            context,
+                            new SDFGenerator(context.getConfig().sdfPadding(), context.getConfig().sdfSpread()),
+                            new Tex2DGlyphAtlas(1024, 1024),
+                            context.getShaderAccess());
+                },
+                (context) -> {
+                    return new FreeTypeTextProducer(context, context.getConfig().pixelSize());
                 },
                 shaderAccess,
                 config,
