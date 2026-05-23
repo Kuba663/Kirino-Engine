@@ -1,7 +1,7 @@
 package com.cleanroommc.kirino.simpletext.glyph;
 
 import com.cleanroommc.kirino.simpletext.ST_Config;
-import com.cleanroommc.kirino.simpletext.ST_FontObject;
+import com.cleanroommc.kirino.simpletext.ST_FontHandle;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
 import org.jspecify.annotations.NonNull;
@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * It helps to load metrics and stores metrics.
- * <p>Note: {@link GlyphMetricsStore} must be owned by a {@link ST_FontObject} owner,
+ * <p>Note: {@link GlyphMetricsStore} must be owned by a {@link ST_FontHandle} owner,
  * so <code>glyphIndex</code> therefore makes sense with a given font face.</p>
  */
 public class GlyphMetricsStore {
@@ -43,7 +43,7 @@ public class GlyphMetricsStore {
 
     @SuppressWarnings("resource")
     @NonNull
-    private GlyphMetrics loadMetrics(ST_FontObject font, ResourceLocation fontRl, int glyphIndex) {
+    private GlyphMetrics loadMetrics(ST_FontHandle font, ResourceLocation fontRl, int glyphIndex) {
         GlyphMetrics outMetrics = new GlyphMetrics();
         font.loadGlyph(glyphIndex, config.payload(), outMetrics);
 
@@ -64,7 +64,7 @@ public class GlyphMetricsStore {
      * @param glyphIndex Glyph index must be positive and valid
      */
     @NonNull
-    public GlyphMetrics loadMetricsIfAbsent(ST_FontObject font, ResourceLocation fontRl, int glyphIndex) {
+    public GlyphMetrics loadMetricsIfAbsent(ST_FontHandle font, ResourceLocation fontRl, int glyphIndex) {
         Preconditions.checkArgument(glyphIndex > 0,
                 "Argument \"glyphIndex\"=%s must be positive.", glyphIndex);
 

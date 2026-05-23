@@ -1,4 +1,4 @@
-package com.cleanroommc.kirino.simpletext.freetype;
+package com.cleanroommc.kirino.simpletext.backend.freetype;
 
 import com.cleanroommc.kirino.utils.MinecraftResourceUtils;
 import com.google.common.base.Preconditions;

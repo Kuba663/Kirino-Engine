@@ -11,9 +11,9 @@ import com.cleanroommc.kirino.simpletext.ST_FontBackendType;
 import com.cleanroommc.kirino.simpletext.SimpleTextRuntime;
 import com.cleanroommc.kirino.simpletext.atlas.Tex2DGlyphAtlas;
 import com.cleanroommc.kirino.simpletext.backend.DebugTextRenderer;
-import com.cleanroommc.kirino.simpletext.backend.FreeTypeFontObject;
+import com.cleanroommc.kirino.simpletext.backend.FreeTypeFontHandle;
 import com.cleanroommc.kirino.simpletext.backend.FreeTypeTextProducer;
-import com.cleanroommc.kirino.simpletext.freetype.FreeTypeManager;
+import com.cleanroommc.kirino.simpletext.backend.freetype.FreeTypeManager;
 import com.cleanroommc.kirino.simpletext.sdf.SDFGenerator;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
 import com.google.common.base.Preconditions;
@@ -45,7 +45,7 @@ public final class ImmediateClientServices {
         textRuntime = new SimpleTextRuntime(
                 (rl, cfg) -> {
                     FT_Face face = freeTypeManager.load(rl, 0, cfg.pixelSize());
-                    return new FreeTypeFontObject(face);
+                    return new FreeTypeFontHandle(face);
                 },
                 (context) -> {
                     return new DebugTextRenderer(

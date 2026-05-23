@@ -11,7 +11,7 @@ import org.lwjgl.util.freetype.FT_Face;
  * <p>Key Assumption: There is only <b>one</b> impl class for each {@link ST_FontBackendType}, so
  * the backend type can therefore act as a protocol.</p>
  */
-public interface ST_FontObject {
+public interface ST_FontHandle {
     @NonNull ST_FontBackendType type();
 
     /**

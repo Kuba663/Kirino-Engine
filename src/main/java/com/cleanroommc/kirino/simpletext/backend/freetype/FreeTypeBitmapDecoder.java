@@ -1,4 +1,4 @@
-package com.cleanroommc.kirino.simpletext.freetype;
+package com.cleanroommc.kirino.simpletext.backend.freetype;
 
 import com.google.common.base.Preconditions;
 import org.jspecify.annotations.NonNull;

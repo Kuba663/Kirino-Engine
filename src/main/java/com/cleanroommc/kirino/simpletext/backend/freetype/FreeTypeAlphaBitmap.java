@@ -1,4 +1,4 @@
-package com.cleanroommc.kirino.simpletext.freetype;
+package com.cleanroommc.kirino.simpletext.backend.freetype;
 
 import com.cleanroommc.kirino.simpletext.ST_Bitmap;
 import org.lwjgl.system.MemoryUtil;

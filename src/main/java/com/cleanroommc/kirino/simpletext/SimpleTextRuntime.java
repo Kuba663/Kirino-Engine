@@ -15,7 +15,7 @@ import java.util.function.Function;
 public class SimpleTextRuntime {
 
     private final ResourceLocation fontRl;
-    private final ST_FontObject font;
+    private final ST_FontHandle font;
     private final ST_Config config;
     private final ImmediateShaderAccess shaderAccess;
 
@@ -23,7 +23,7 @@ public class SimpleTextRuntime {
         return fontRl;
     }
 
-    public ST_FontObject getFont() {
+    public ST_FontHandle getFont() {
         return font;
     }
 
@@ -40,7 +40,7 @@ public class SimpleTextRuntime {
     private final SimpleTextProducer textProducer;
 
     public SimpleTextRuntime(
-            @NonNull BiFunction<ResourceLocation, ST_Config, ST_FontObject> fontFactory,
+            @NonNull BiFunction<ResourceLocation, ST_Config, ST_FontHandle> fontFactory,
             @NonNull Function<SimpleTextRuntime, SimpleTextConsumer> consumerFactory,
             @NonNull Function<SimpleTextRuntime, SimpleTextProducer> producerFactory,
             @NonNull ImmediateShaderAccess shaderAccess,

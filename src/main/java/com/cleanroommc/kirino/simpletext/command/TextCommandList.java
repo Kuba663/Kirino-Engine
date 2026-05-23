@@ -1,10 +1,10 @@
 package com.cleanroommc.kirino.simpletext.command;
 
-import com.cleanroommc.kirino.simpletext.ST_FontObject;
+import com.cleanroommc.kirino.simpletext.ST_FontHandle;
 import org.jspecify.annotations.NonNull;
 
 /**
- * <p>Note: {@link TextCommandList} must be owned by a {@link ST_FontObject} owner,
+ * <p>Note: {@link TextCommandList} must be owned by a {@link ST_FontHandle} owner,
  * so <code>glyphIndex</code> therefore makes sense with a given font face.</p>
  */
 public final class TextCommandList {

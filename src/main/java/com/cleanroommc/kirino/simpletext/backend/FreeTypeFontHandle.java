@@ -2,10 +2,10 @@ package com.cleanroommc.kirino.simpletext.backend;
 
 import com.cleanroommc.kirino.simpletext.ST_Bitmap;
 import com.cleanroommc.kirino.simpletext.ST_FontBackendType;
-import com.cleanroommc.kirino.simpletext.ST_FontObject;
-import com.cleanroommc.kirino.simpletext.freetype.FreeTypeAlphaBitmap;
-import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapDecoder;
-import com.cleanroommc.kirino.simpletext.freetype.FreeTypeBitmapLoader;
+import com.cleanroommc.kirino.simpletext.ST_FontHandle;
+import com.cleanroommc.kirino.simpletext.backend.freetype.FreeTypeAlphaBitmap;
+import com.cleanroommc.kirino.simpletext.backend.freetype.FreeTypeBitmapDecoder;
+import com.cleanroommc.kirino.simpletext.backend.freetype.FreeTypeBitmapLoader;
 import com.cleanroommc.kirino.simpletext.glyph.GlyphMetrics;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -13,12 +13,12 @@ import org.lwjgl.util.freetype.FT_Bitmap;
 import org.lwjgl.util.freetype.FT_Face;
 import org.lwjgl.util.freetype.FreeType;
 
-public class FreeTypeFontObject implements ST_FontObject {
+public class FreeTypeFontHandle implements ST_FontHandle {
 
     private final FT_Face face;
     private final boolean hasKerning;
 
-    public FreeTypeFontObject(FT_Face face) {
+    public FreeTypeFontHandle(FT_Face face) {
         this.face = face;
         hasKerning = FreeType.FT_HAS_KERNING(face);
     }
