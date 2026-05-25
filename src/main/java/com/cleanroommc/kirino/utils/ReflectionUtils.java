@@ -1,6 +1,7 @@
 package com.cleanroommc.kirino.utils;
 
 import com.google.common.base.Preconditions;
+import net.lenni0451.reflect.JavaBypass;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -25,28 +26,28 @@ import java.util.Optional;
  *
  * <hr>
  * <p>Example:<p/>
- * <code>
- * private static class MethodHolder {<br>
- * &emsp;static final Delegate DELEGATE;<br>
- *<br>
- * &emsp;static {<br>
- * &emsp;&emsp;DELEGATE = new Delegate(ReflectionUtils.getConstructor(FreeTypeManager.class));<br>
- *<br>
- * &emsp;&emsp;Preconditions.checkNotNull(DELEGATE.freeTypeManagerCtor);<br>
- * &emsp;}<br>
- *<br>
- * &emsp;static FreeTypeManager newFreeTypeManager() {<br>
- * &emsp;&emsp;try {<br>
- * &emsp;&emsp;&emsp;return (FreeTypeManager) DELEGATE.freeTypeManagerCtor.invokeExact();<br>
- * &emsp;&emsp;} catch (Throwable e) {<br>
- * &emsp;&emsp;&emsp;throw new RuntimeException(e);<br>
- * &emsp;&emsp;}<br>
- * &emsp;}<br>
- *<br>
- * &emsp;record Delegate(MethodHandle freeTypeManagerCtor) {<br>
- * &emsp;}<br>
- * }<br>
- * </code>
+ * <pre><code>
+ * private static class MethodHolder {
+ *     static final Delegate DELEGATE;
+ *
+ *     static {
+ *         DELEGATE = new Delegate(ReflectionUtils.getConstructor(FreeTypeManager.class));
+ *
+ *         Preconditions.checkNotNull(DELEGATE.freeTypeManagerCtor);
+ *     }
+ *
+ *     static FreeTypeManager newFreeTypeManager() {
+ *         try {
+ *             return (FreeTypeManager) DELEGATE.freeTypeManagerCtor.invokeExact();
+ *         } catch (Throwable e) {
+ *             throw new RuntimeException(e);
+ *         }
+ *     }
+ *
+ *     record Delegate(MethodHandle freeTypeManagerCtor) {
+ *     }
+ * }
+ * </code></pre>
  * <br>
  * <hr>
  *

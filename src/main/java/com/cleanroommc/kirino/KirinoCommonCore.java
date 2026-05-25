@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public final class KirinoCommonCore {
+
     private KirinoCommonCore() {
     }
 

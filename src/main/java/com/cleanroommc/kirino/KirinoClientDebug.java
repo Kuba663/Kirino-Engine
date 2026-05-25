@@ -19,6 +19,7 @@ import org.jspecify.annotations.NonNull;
  * debug services are registered. Accessing methods too early will cause NPE.</p>
  */
 public final class KirinoClientDebug {
+
     private KirinoClientDebug() {
     }
 

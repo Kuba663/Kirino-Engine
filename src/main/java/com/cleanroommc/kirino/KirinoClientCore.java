@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import static com.cleanroommc.kirino.KirinoCommonCore.*;
 
 public final class KirinoClientCore {
+
     private KirinoClientCore() {
     }
 
@@ -99,13 +100,13 @@ public final class KirinoClientCore {
      *
      * <hr>
      * <p><b><code>RenderGlobal</code> Patch</b>:</p>
-     * <code>
-     * public void notifyBlockUpdate(World worldIn, BlockPos pos, IBlockState oldState, IBlockState newState, int flags)<br>
-     * {<br>
-     * &emsp;...<br>
-     * &emsp;com.cleanroommc.kirino.KirinoCore.RenderGlobal$notifyBlockUpdate(i, j, k, oldState, newState);<br>
-     * }<br>
-     * </code>
+     * <pre><code>
+     * public void notifyBlockUpdate(World worldIn, BlockPos pos, IBlockState oldState, IBlockState newState, int flags)
+     * {
+     *     ...
+     *     com.cleanroommc.kirino.KirinoCore.RenderGlobal$notifyBlockUpdate(i, j, k, oldState, newState);
+     * }
+     * </code></pre>
      *
      * <br>
      * <hr>
@@ -130,13 +131,13 @@ public final class KirinoClientCore {
      *
      * <hr>
      * <p><b><code>RenderGlobal</code> Patch</b>:</p>
-     * <code>
-     * public void notifyLightSet(BlockPos pos)<br>
-     * {<br>
-     * &emsp;...<br>
-     * &emsp;com.cleanroommc.kirino.KirinoCore.RenderGlobal$notifyLightUpdate(pos.getX(), pos.getY(), pos.getZ());<br>
-     * }<br>
-     * </code>
+     * <pre><code>
+     * public void notifyLightSet(BlockPos pos)
+     * {
+     *     ...
+     *     com.cleanroommc.kirino.KirinoCore.RenderGlobal$notifyLightUpdate(pos.getX(), pos.getY(), pos.getZ());
+     * }
+     * </code></pre>
      *
      * <br>
      * <hr>
@@ -161,7 +162,7 @@ public final class KirinoClientCore {
      * When the render delegate is disabled or the rendering is unsupported,
      * vanilla {@link net.minecraft.client.renderer.EntityRenderer#renderWorld(float, long)} will take place
      * instead of our {@link #EntityRenderer$renderWorld(long)}, and this method will be injected
-     * to several places of vanilla {@link net.minecraft.client.renderer.EntityRenderer#renderWorld(float, long)}
+     * to multiple places of vanilla {@link net.minecraft.client.renderer.EntityRenderer#renderWorld(float, long)}
      * to run the full engine lifecycle headlessly.
      *
      * <br>
@@ -174,28 +175,28 @@ public final class KirinoClientCore {
     /**
      * This method is a direct replacement of vanilla {@link net.minecraft.client.renderer.EntityRenderer#renderWorld(float, long)}
      * <i>when the render delegate is enabled and the rendering is supported</i>.
-     * Specifically, <code>anaglyph</code> logic is removed and all other functions remain the same.
+     * Specifically, <code>anaglyph</code> logic is removed and all other functionalities remain the same.
      * <code>anaglyph</code> can be easily added back via post-processing by the way.
      *
      * <hr>
      * <p><b><code>EntityRenderer</code> Patch</b>:</p>
-     * <code>
-     * public void updateCameraAndRender(float partialTicks, long nanoTime)<br>
-     * {<br>
-     * &emsp;...<br>
-     * &emsp;if (com.cleanroommc.kirino.KirinoCore.KIRINO_CONFIG_HUB.isEnable()<br>
-     * &emsp;&emsp;&emsp;&& com.cleanroommc.kirino.KirinoCore.KIRINO_CONFIG_HUB.isEnableRenderDelegate()<br>
-     * &emsp;&emsp;&emsp;&& !com.cleanroommc.kirino.KirinoCore.isRenderUnsupported())<br>
-     * &emsp;{<br>
-     * &emsp;&emsp;com.cleanroommc.kirino.KirinoCore.EntityRenderer$renderWorld(System.nanoTime() + l);<br>
-     * &emsp;}<br>
-     * &emsp;else<br>
-     * &emsp;{<br>
-     * &emsp;&emsp;this.renderWorld(partialTicks, System.nanoTime() + l);<br>
-     * &emsp;}<br>
-     * &emsp;...<br>
-     * }<br>
-     * </code>
+     * <pre><code>
+     * public void updateCameraAndRender(float partialTicks, long nanoTime)
+     * {
+     *     ...
+     *     if (com.cleanroommc.kirino.KirinoCore.KIRINO_CONFIG_HUB.isEnable()
+     *             && com.cleanroommc.kirino.KirinoCore.KIRINO_CONFIG_HUB.isEnableRenderDelegate()
+     *             && !com.cleanroommc.kirino.KirinoCore.isRenderUnsupported())
+     *     {
+     *         com.cleanroommc.kirino.KirinoCore.EntityRenderer$renderWorld(System.nanoTime() + l);
+     *     }
+     *     else
+     *     {
+     *         this.renderWorld(partialTicks, System.nanoTime() + l);
+     *     }
+     *     ...
+     * }
+     * </code></pre>
      *
      * <br>
      * <hr>

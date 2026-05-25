@@ -4,6 +4,7 @@ import static com.cleanroommc.kirino.KirinoCommonCore.KIRINO_CONFIG_HUB;
 import static com.cleanroommc.kirino.KirinoCommonCore.LOGGER;
 
 public final class KirinoServerCore {
+
     private KirinoServerCore() {
     }
 
