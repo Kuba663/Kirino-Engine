@@ -4,11 +4,13 @@ import com.cleanroommc.kirino.engine.render.core.shader.ImmediateShaderAccess;
 import com.cleanroommc.kirino.simpletext.command.TextCommandList;
 import com.cleanroommc.kirino.simpletext.glyph.GlyphMetrics;
 import com.cleanroommc.kirino.simpletext.glyph.GlyphMetricsStore;
+import com.cleanroommc.kirino.simpletext.text.CodepointIterator;
 import com.google.common.base.Preconditions;
 import net.minecraft.util.ResourceLocation;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -109,19 +111,37 @@ public class SimpleTextRuntime {
         return this;
     }
 
-    /**
-     * <p>Debug Utility</p>
-     * It's a simulated version of {@link #endDraw()}, which won't draw anything.
-     */
-    @NonNull
-    public TextCommandList endPseudo() {
+    public SimpleTextProducer.@NonNull LineInfo simulate(@NonNull String text, float x, float y) {
+        SimpleTextProducer.LineInfo outLineInfo = new SimpleTextProducer.LineInfo();
+        textProducer.beginBatch();
+        textProducer.append(text, x, y, textProducer.standardFontSize(), outLineInfo);
         textProducer.endBatch();
-        return textProducer.submit().copy();
+        return outLineInfo;
+    }
+
+    public SimpleTextProducer.@NonNull LineInfo simulate(@NonNull String text, float x, float y, float fontSize) {
+        SimpleTextProducer.LineInfo outLineInfo = new SimpleTextProducer.LineInfo();
+        textProducer.beginBatch();
+        textProducer.append(text, x, y, fontSize, outLineInfo);
+        textProducer.endBatch();
+        return outLineInfo;
     }
 
     @NonNull
-    public SimpleTextRuntime append(String text, float x, float y) {
-        textProducer.append(text, x, y);
+    public SimpleTextRuntime append(@NonNull String text, float x, float y) {
+        textProducer.append(text, x, y, textProducer.standardFontSize(), null);
+        return this;
+    }
+
+    @NonNull
+    public SimpleTextRuntime append(@NonNull String text, float x, float y, float fontSize, int color) {
+        int cpCount = CodepointIterator.count(text);
+        float[] sizeArr = new float[cpCount];
+        int[] colorArr = new int[cpCount];
+        int[] hintArr = new int[cpCount];
+        Arrays.fill(sizeArr, 1f);
+        Arrays.fill(colorArr, color);
+        textProducer.append(text, x, y, fontSize, sizeArr, colorArr, hintArr, null);
         return this;
     }
 }

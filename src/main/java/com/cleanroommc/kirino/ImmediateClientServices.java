@@ -12,7 +12,7 @@ import com.cleanroommc.kirino.simpletext.SimpleTextRuntime;
 import com.cleanroommc.kirino.simpletext.atlas.Tex2DGlyphAtlas;
 import com.cleanroommc.kirino.simpletext.backend.DebugTextRenderer;
 import com.cleanroommc.kirino.simpletext.backend.FreeTypeFontHandle;
-import com.cleanroommc.kirino.simpletext.backend.FreeTypeTextProducer;
+import com.cleanroommc.kirino.simpletext.backend.DefaultTextProducer;
 import com.cleanroommc.kirino.simpletext.backend.freetype.FreeTypeManager;
 import com.cleanroommc.kirino.simpletext.sdf.SDFGeneratorBruteForceImpl;
 import com.cleanroommc.kirino.utils.ReflectionUtils;
@@ -55,7 +55,7 @@ public final class ImmediateClientServices {
                             context.getShaderAccess());
                 },
                 (context) -> {
-                    return new FreeTypeTextProducer(context, context.getConfig().pixelSize());
+                    return new DefaultTextProducer(context, context.getConfig().pixelSize());
                 },
                 shaderAccess,
                 config,

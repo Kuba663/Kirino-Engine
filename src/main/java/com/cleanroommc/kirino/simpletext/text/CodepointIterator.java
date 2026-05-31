@@ -5,6 +5,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
+import java.util.function.IntConsumer;
 
 public class CodepointIterator implements PrimitiveIterator.OfInt {
 
@@ -42,5 +43,16 @@ public class CodepointIterator implements PrimitiveIterator.OfInt {
 
     public void reset() {
         index = 0;
+    }
+
+    public static int count(@NonNull String text) {
+        Preconditions.checkNotNull(text);
+
+        final int[] count = new int[1];
+        (new CodepointIterator(text)).forEachRemaining((IntConsumer) (codepoint) -> {
+            count[0] = count[0] + 1;
+        });
+
+        return count[0];
     }
 }
