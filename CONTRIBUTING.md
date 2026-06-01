@@ -1,4 +1,4 @@
-# Contributing to Kirino Rendering
+# Contributing to Kirino Engine
 
 Kirino Engine is a domain specific engine designed for Minecraft.
 - Original proposal (the current scope is slightly more generalized): [Link](https://github.com/CleanroomMC/Cleanroom/discussions/405)
@@ -35,7 +35,7 @@ Kirino Engine is a domain specific engine designed for Minecraft.
 ## Ways to Contribute
 
 - Report bugs via [Issues](https://github.com/CleanroomMC/Kirino-Engine/issues)
-- Improve / add more java docs (typos, explanations, tutorials)
+- Improve / add more Javadocs (typos, explanations, tutorials)
 - Add unit tests / coverage tests (`Cleanroom/projects/kirino/src/test/java/`)
 - Implement features. (Check [Project Board](https://github.com/orgs/CleanroomMC/projects/13) / Propose your own)
   Contact me, tttsaurus, (via Discord or GitHub issues) if you want to implement anything
@@ -147,7 +147,7 @@ Kirino Engine is a domain specific engine designed for Minecraft.
       // let's...
   }
   ```
-- Add space after line-comment (`//`).
+- Add space after line-comments (`//`).
 
   **Bad:**
   ```java
@@ -166,13 +166,13 @@ Kirino Engine is a domain specific engine designed for Minecraft.
   **Bad:**
   ```java
   void func(int value) {
-      Preconditions.checkArgument(value >= 0, "Argument \"value\"=%s must not be non-negative", value);
+      Preconditions.checkArgument(value >= 0, "Argument \"value\"=%s must be non-negative", value);
   }
   ```
   **Good:**
   ```java
   void func(int value) {
-      Preconditions.checkArgument(value >= 0, "Argument \"value\"=%s must not be non-negative.", value);
+      Preconditions.checkArgument(value >= 0, "Argument \"value\"=%s must be non-negative.", value);
   }
   ```
 - Use `\" \"` to quote parameters in error messages. It'd be the best you output the values via `%s` too.
@@ -180,7 +180,7 @@ Kirino Engine is a domain specific engine designed for Minecraft.
   **Good (Use it as a template):**
   ```java
   void func(int value) {
-      Preconditions.checkArgument(value >= 0, "Argument \"value\"=%s must not be non-negative.", value);
+      Preconditions.checkArgument(value >= 0, "Argument \"value\"=%s must be non-negative.", value);
   }
   ```
 - Add a single space after each comma in a list of items, parameters, or arguments.
