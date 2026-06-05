@@ -4,7 +4,7 @@
 - Terrain meshlet double buffering
 - Meshlet write → compute → fully programmable vertex pulling _(i)_
 - Expand the _(i)_ pipeline to opaque/transparent/cutout
-- Block udpate notify
+- Block update notify
 - On demand compute; in place rewrite
 
 **Follow-up Tasks:**
@@ -361,3 +361,25 @@ We'll therefore be able to give AO to any non-fullblock tiles, including self-oc
 ![](gallery/2026-04-11.png)
 Essentially addressing this vanilla AO issue.
 
+## May 2026
+**Done:**
+- Add `ShutdownManager`
+- Improve `ForkJoinPoolUtils`
+- Improve `QuantileUtils` (-> `MedianUtils`)
+- Some docs
+- SimpleText: SDF font rendering
+  - FreeType as the default backend
+  - `ST_FontHandle` - abstract away font rasterizer backend
+  - Producer-consumer pattern
+  - Glyph command list (SoA arena, zero GC)
+  - Abstract backend agnostic paged atlas
+  - NO HarfBuzz, MSDF, ligature, BiDi, etc.
+
+_SimpleText_
+![](gallery/2026-05-31.png)
+
+**Want To Implement:**
+- A more feature rich implementation of the SimpleText text consumer
+- SimpleGUI: a ByteBuffer command stream driven GUI rendering helper layer (no layout etc.)
+- Engine Editor: `Document` oriented, no actual record classes for runtime data (generic database instead), easy undo,
+  command driven, session oriented (no widget tree for docking)

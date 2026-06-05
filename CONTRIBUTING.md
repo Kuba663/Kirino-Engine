@@ -213,6 +213,30 @@ Kirino Engine is a domain specific engine designed for Minecraft.
       return;
   }
   ```
+- Line wrap rules
+
+  **Bad:**
+  ```java
+  void func(
+      int a, 
+      int b, 
+      int c, 
+      ...
+  ) {
+      // code...
+  }
+  ```
+  **Good:**
+  ```java
+  void func(
+      int a, 
+      int b, 
+      int c,
+      ...) {
+  
+      // code...
+  }
+  ```
 - Use `//<editor-fold desc="your desc">` & `//</editor-fold>` if the code chunk is huge and boilerplate heavy 
   _OR_ you think it would be necessary.
 

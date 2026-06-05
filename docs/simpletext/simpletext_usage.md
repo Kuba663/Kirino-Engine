@@ -69,7 +69,7 @@ You should create your own text runtime to take full control.
 }
 ```
 
-`fontFactory` is designed to return a `ST_FontHandle` based on the given `ResourceLocation` and `ST_Config`.
+`fontFactory` is designed to return a `ST_FontHandle` with the given `ResourceLocation` and `ST_Config`.
 
 `FreeTypeManager.load(rl, faceIndex, pixelSize)` is how you load a font face with FreeType. 
 You can get access to `FreeTypeManager` via `ICS.instance().freetype()` for your own text runtime.
@@ -96,9 +96,9 @@ other font rasterizer libs, _**BUT**_ you'll have to modify Kirino Engine source
 }
 ```
 
-`fontFactory` is designed to return a `SimpleTextConsumer` based on the given `SimpleTextRuntime`.
+`consumerFactory` is designed to return a `SimpleTextConsumer` with the given `SimpleTextRuntime`.
 
-The arguments you'll have to input to the constructor totally depends on your `SimpleTextConsumer` implementation.
+The arguments you'll have to input to the constructor totally depend on your `SimpleTextConsumer` implementation.
 
 **Tips**:
 - `context.getShaderAccess()` helps you to create shaders
@@ -114,10 +114,10 @@ The arguments you'll have to input to the constructor totally depends on your `S
 }
 ```
 
-`producerFactory` is designed to return a `SimpleTextProducer` based on the given `SimpleTextRuntime`.
+`producerFactory` is designed to return a `SimpleTextProducer` with the given `SimpleTextRuntime`.
 
 And `SimpleTextProducer` is where you implement your text shaping logic. The default implementation is
-heavily coupled with FreeType since it fetches glyph metrics and kerning from FreeType.
+heavily coupled with FreeType since it fetches the kerning info from FreeType.
 
 ### Scope & Limitations
 The scope of SimpleText is simply creating a text runtime for the engine editor GUIs.
