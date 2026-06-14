@@ -17,7 +17,7 @@ public class SimpleGuiRuntime {
         arena = new TransientArena(1024);
         stream = new GuiCommandStream(1024);
         compiler = new GuiCompiler(arena);
-        renderer = new GuiRenderer(1024, 1024);
+        renderer = new GuiRenderer(arena);
     }
 
     private boolean batch = false;

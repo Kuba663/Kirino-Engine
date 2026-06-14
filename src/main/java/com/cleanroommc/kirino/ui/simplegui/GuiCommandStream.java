@@ -26,15 +26,14 @@ public class GuiCommandStream {
         buffer.clear();
     }
 
-    private static int align16(int x) {
-        return (x + 15) & ~15;
-    }
-
+    /**
+     * <p>Note: It assumes no arithmetic overflow and doesn't handle such situation.</p>
+     */
     private int begin(int op, int flags, int payload, int reserve) {
         int start = buffer.position();
 
         int used = SG_CmdHeader.HEADER_SIZE + payload;
-        int size = align16(used + reserve);
+        int size = (used + reserve + 15) & ~15;
 
         if (start + size > capacity) {
             throw new RuntimeException(String.format(

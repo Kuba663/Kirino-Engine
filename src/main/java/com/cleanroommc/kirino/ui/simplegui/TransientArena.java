@@ -27,8 +27,13 @@ final class TransientArena {
         buffer = BufferUtils.createByteBuffer(capacity);
     }
 
+    /**
+     * <p>Note: It assumes no arithmetic overflow and doesn't handle such situation.</p>
+     *
+     * @param align Must be power of 2 and >= 2
+     */
     public int alloc(int size, int align) {
-        Preconditions.checkArgument(Integer.bitCount(align) == 1,
+        Preconditions.checkArgument(Integer.bitCount(align) == 1 && align >= 2,
                 "Argument \"align\"=%s must be power of 2 and >= 2.", align);
 
         int p = buffer.position();
