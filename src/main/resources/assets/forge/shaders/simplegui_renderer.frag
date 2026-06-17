@@ -38,17 +38,23 @@ void main()
         {
             if (!hasBorder && !hasShadow)
             {
-
+                FragColor = Color;
             }
             else if (hasBorder && !hasShadow)
             {
-                if (BorderDist >= 0.0 && BorderDist <= 1.0)
+                float aaWidth = 0.08;
+                if (BorderDist < 1.0 - aaWidth)
                 {
                     FragColor = Color;
                 }
-                if (BorderDist > 1.0 && BorderDist <= 2.0)
+                else if (BorderDist > 1.0 + aaWidth)
                 {
                     FragColor = BorderColor;
+                }
+                else
+                {
+                    float t = smoothstep(1.0 - aaWidth, 1.0 + aaWidth, BorderDist);
+                    FragColor = mix(Color, BorderColor, t);
                 }
             }
             else if (!hasBorder && hasShadow)

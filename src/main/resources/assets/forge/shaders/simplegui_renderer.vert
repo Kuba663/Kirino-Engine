@@ -105,6 +105,7 @@ vec2 roundedRectVertex1(RectPayload payload, uint vertId)
 
     if (lane == 0u)
     {
+        BorderDist = 0.0;
         return arenaVerts[centerIndex];
     }
 
@@ -114,6 +115,7 @@ vec2 roundedRectVertex1(RectPayload payload, uint vertId)
         ringIndex = (ringIndex + 1) % ringCount;
     }
 
+    BorderDist = 1.0;
     return arenaVerts[ringStart + ringIndex];
 }
 
@@ -191,36 +193,34 @@ vec2 roundedRectVertex2(RectPayload payload, uint vertId, float pad)
 
     vec2 pos = arenaVerts[ringStart + ringIndex];
 
-    if (!useOuter)
+    if (!useOuter || pad == 0.0)
     {
         BorderDist = 1.0;
         return pos;
     }
 
-    int cornerVertCount = max(ringCount / 4, 1);
-    int corner = clamp(ringIndex / cornerVertCount, 0, 3);
+    vec2 innerMin = payload.rect.xy + vec2(payload.radius);
+    vec2 innerMax = payload.rect.xy + payload.rect.zw - vec2(payload.radius);
 
-    vec2 outward;
+    vec2 cornerCenter = vec2(
+        (pos.x < (payload.rect.x + payload.rect.z * 0.5)) ? innerMin.x : innerMax.x,
+        (pos.y < (payload.rect.y + payload.rect.w * 0.5)) ? innerMin.y : innerMax.y);
 
-    // top-left
-    if (corner == 0)
+    vec2 outward = pos - cornerCenter;
+
+    float len = length(outward);
+    if (len > 0.001)
     {
-        outward = vec2(-1.0, -1.0);
+        outward /= len;
     }
-    // top-right
-    else if (corner == 1)
-    {
-        outward = vec2(1.0, -1.0);
-    }
-    // bottom-right
-    else if (corner == 2)
-    {
-        outward = vec2(1.0, 1.0);
-    }
-    // bottom-left
     else
     {
-        outward = vec2(-1.0, 1.0);
+        int cornerVertCount = max(ringCount / 4, 1);
+        int corner = clamp(ringIndex / cornerVertCount, 0, 3);
+        outward = (corner == 0) ? vec2(-1.0, -1.0) :
+                  (corner == 1) ? vec2( 1.0, -1.0) :
+                  (corner == 2) ? vec2( 1.0,  1.0) : vec2(-1.0,  1.0);
+        outward = normalize(outward);
     }
 
     BorderDist = 2.0;
