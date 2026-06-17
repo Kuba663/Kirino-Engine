@@ -24,7 +24,7 @@ in float RoundedRectDist;
 
 out vec4 FragColor;
 
-float directionalShadow(vec2 shadowOffset, vec4 rect, vec2 localPos)
+float directionalShadow(vec2 shadowOffset, vec4 rect, vec2 localPos, float roundedRectDist)
 {
     vec2 shadowDir = normalize(shadowOffset);
     vec2 center = rect.zw * 0.5;
@@ -46,7 +46,7 @@ float directionalShadow(vec2 shadowOffset, vec4 rect, vec2 localPos)
     float t = clamp(directional * 0.5 + 0.5, 0.0, 1.0);
     t = t * t * t;
     float directionalFactor = mix(0.0, 1.0, t);
-    float shadowT = clamp(RoundedRectDist - 2.0, 0.0, 1.0);
+    float shadowT = clamp(roundedRectDist - 2.0, 0.0, 1.0);
     float shadowAlpha = (1.0 - smoothstep(0.0, 1.0, shadowT)) * directionalFactor;
 
     return shadowAlpha;
@@ -59,8 +59,6 @@ void main()
         bool hasRadius = (Flags & FLAG_RADIUS) != 0;
         bool hasBorder = (Flags & FLAG_BORDER) != 0;
         bool hasShadow = (Flags & FLAG_SHADOW) != 0;
-
-        FragColor = Color;
 
         if (hasRadius)
         {
@@ -104,7 +102,24 @@ void main()
             }
             else if (!hasBorder && hasShadow)
             {
-
+                if (RoundedRectDist < 1.0 - aaWidth)
+                {
+                    FragColor = Color;
+                }
+                else if (RoundedRectDist < 1.0)
+                {
+                    vec4 shadow = ShadowColor;
+                    shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos, RoundedRectDist);
+                    shadow = mix(shadow, Color, 1.0 - shadow.a);
+                    float t = smoothstep(1.0 - aaWidth, 1.0, RoundedRectDist);
+                    FragColor = mix(Color, shadow, t);
+                }
+                else
+                {
+                    vec4 shadow = ShadowColor;
+                    shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos, RoundedRectDist);
+                    FragColor = shadow;
+                }
             }
             else if (hasBorder && hasShadow)
             {
@@ -124,19 +139,15 @@ void main()
                 else if (RoundedRectDist < 2.0)
                 {
                     vec4 shadow = ShadowColor;
-                    shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos);
-                    if (shadow.a <= 0.01)
-                    {
-                        shadow = BorderColor;
-                        shadow.a = 0.0;
-                    }
+                    shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos, RoundedRectDist);
+                    shadow = mix(shadow, BorderColor, 1.0 - shadow.a);
                     float t = smoothstep(2.0 - aaWidth, 2.0, RoundedRectDist);
                     FragColor = mix(BorderColor, shadow, t);
                 }
                 else
                 {
                     vec4 shadow = ShadowColor;
-                    shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos);
+                    shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos, RoundedRectDist);
                     FragColor = shadow;
                 }
             }
@@ -145,19 +156,68 @@ void main()
         {
             if (!hasBorder && !hasShadow)
             {
-
+                FragColor = Color;
             }
             else if (hasBorder && !hasShadow)
             {
+                bool insideFill = (LocalPos.x >= 0.0 && LocalPos.y >= 0.0 && LocalPos.x <= Rect.z && LocalPos.y <= Rect.w);
+                bool insideBorder = (LocalPos.x >= -BorderWidth && LocalPos.y >= -BorderWidth && LocalPos.x <= Rect.z + BorderWidth && LocalPos.y <= Rect.w + BorderWidth);
 
+                if (insideFill)
+                {
+                    FragColor = Color;
+                }
+                else if (insideBorder)
+                {
+                    FragColor = BorderColor;
+                }
+                else
+                {
+                    discard;
+                }
             }
             else if (!hasBorder && hasShadow)
             {
+                bool insideFill = (LocalPos.x >= 0.0 && LocalPos.y >= 0.0 && LocalPos.x <= Rect.z && LocalPos.y <= Rect.w);
+                vec2 shadowLocal = LocalPos - ShadowOffset;
+                bool insideShadow = (shadowLocal.x >= -ShadowBlur && shadowLocal.y >= -ShadowBlur && shadowLocal.x <= Rect.z + ShadowBlur && shadowLocal.y <= Rect.w + ShadowBlur);
 
+                if (insideFill)
+                {
+                    FragColor = Color;
+                }
+                else if (insideShadow)
+                {
+                    FragColor = ShadowColor;
+                }
+                else
+                {
+                    discard;
+                }
             }
             else if (hasBorder && hasShadow)
             {
+                bool insideFill = (LocalPos.x >= 0.0 && LocalPos.y >= 0.0 && LocalPos.x <= Rect.z && LocalPos.y <= Rect.w);
+                bool insideBorder = (LocalPos.x >= -BorderWidth && LocalPos.y >= -BorderWidth && LocalPos.x <= Rect.z + BorderWidth && LocalPos.y <= Rect.w + BorderWidth);
+                vec2 shadowLocal = LocalPos - ShadowOffset;
+                bool insideShadow = (shadowLocal.x >= -(ShadowBlur + BorderWidth) && shadowLocal.y >= -(ShadowBlur + BorderWidth) && shadowLocal.x <= Rect.z + ShadowBlur + BorderWidth && shadowLocal.y <= Rect.w + ShadowBlur + BorderWidth);
 
+                if (insideFill)
+                {
+                    FragColor = Color;
+                }
+                else if (insideBorder)
+                {
+                    FragColor = BorderColor;
+                }
+                else if (insideShadow)
+                {
+                    FragColor = ShadowColor;
+                }
+                else
+                {
+                    discard;
+                }
             }
         }
     }

@@ -496,7 +496,7 @@ void main()
             }
             if (hasShadow)
             {
-                pad += max(abs(payload.shadow.x), abs(payload.shadow.y));
+                pad += abs(payload.shadowBlur) + max(abs(payload.shadow.x), abs(payload.shadow.y));
             }
             pos = rectVertex(payload.rect, uint(gl_VertexID), pad);
         }
