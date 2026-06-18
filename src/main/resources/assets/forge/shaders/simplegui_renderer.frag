@@ -10,7 +10,7 @@
 
 in flat int DrawType;
 in flat int Flags;
-in flat vec4 Color;
+in flat vec4 Color0;
 in flat vec4 BorderColor;
 in flat vec4 ShadowColor;
 in flat vec4 Rect;
@@ -21,6 +21,7 @@ in flat vec2 ShadowOffset;
 in flat float Radius;
 in flat float Pad;
 in float RoundedRectDist;
+in float LineDist;
 
 out vec4 FragColor;
 
@@ -71,26 +72,26 @@ void main()
             {
                 if (RoundedRectDist < 1.0 - aaWidth)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else
                 {
-                    vec4 outsideColor = Color;
+                    vec4 outsideColor = Color0;
                     outsideColor.a = 0.0;
                     float t = smoothstep(1.0 - aaWidth, 1.0, RoundedRectDist);
-                    FragColor = mix(Color, outsideColor, t);
+                    FragColor = mix(Color0, outsideColor, t);
                 }
             }
             else if (hasBorder && !hasShadow)
             {
                 if (RoundedRectDist < 1.0 - aaWidth)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else if (RoundedRectDist < 1.0 + aaWidth)
                 {
                     float t = smoothstep(1.0 - aaWidth, 1.0 + aaWidth, RoundedRectDist);
-                    FragColor = mix(Color, BorderColor, t);
+                    FragColor = mix(Color0, BorderColor, t);
                 }
                 else if (RoundedRectDist < 2.0 - aaWidth)
                 {
@@ -108,17 +109,17 @@ void main()
             {
                 if (RoundedRectDist < 1.0 - aaWidth)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else if (RoundedRectDist < 1.0)
                 {
                     vec4 shadow = ShadowColor;
                     shadow.a *= directionalShadow(ShadowOffset, Rect, LocalPos, RoundedRectDist, ShadowBlur);
                     float a = shadow.a;
-                    shadow = mix(shadow, Color, 1.0 - a);
+                    shadow = mix(shadow, Color0, 1.0 - a);
                     shadow.a = a;
                     float t = smoothstep(1.0 - aaWidth, 1.0, RoundedRectDist);
-                    FragColor = mix(Color, shadow, t);
+                    FragColor = mix(Color0, shadow, t);
                 }
                 else
                 {
@@ -141,12 +142,12 @@ void main()
             {
                 if (RoundedRectDist < 1.0 - aaWidth)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else if (RoundedRectDist < 1.0 + aaWidth)
                 {
                     float t = smoothstep(1.0 - aaWidth, 1.0 + aaWidth, RoundedRectDist);
-                    FragColor = mix(Color, BorderColor, t);
+                    FragColor = mix(Color0, BorderColor, t);
                 }
                 else if (RoundedRectDist < 2.0 - aaWidth)
                 {
@@ -184,7 +185,7 @@ void main()
         {
             if (!hasBorder && !hasShadow)
             {
-                FragColor = Color;
+                FragColor = Color0;
             }
             else if (hasBorder && !hasShadow)
             {
@@ -193,7 +194,7 @@ void main()
 
                 if (insideFill)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else if (insideBorder)
                 {
@@ -212,7 +213,7 @@ void main()
 
                 if (insideFill)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else if (insideShadow)
                 {
@@ -232,7 +233,7 @@ void main()
 
                 if (insideFill)
                 {
-                    FragColor = Color;
+                    FragColor = Color0;
                 }
                 else if (insideBorder)
                 {
@@ -251,7 +252,31 @@ void main()
     }
     else if (DrawType == DRAW_LINES)
     {
-        FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+        float aaWidth = fwidth(LineDist);
+        aaWidth = max(aaWidth, 0.01);
+
+        vec4 targetColor = Color0;
+
+        if (LineDist < 1.0 + aaWidth)
+        {
+            float perc = clamp((max(1.0, LineDist) - 1.0) / aaWidth, 0.0, 1.0);
+            perc = 1.0 - perc;
+            vec4 outsideColor = targetColor;
+            outsideColor.a = 0.0;
+            float t = smoothstep(0.0, 1.0, perc);
+            FragColor = mix(targetColor, outsideColor, t);
+        }
+        else if (LineDist < 2.0 - aaWidth)
+        {
+            FragColor = targetColor;
+        }
+        else
+        {
+            vec4 outsideColor = targetColor;
+            outsideColor.a = 0.0;
+            float t = smoothstep(2.0 - aaWidth, 2.0, LineDist);
+            FragColor = mix(targetColor, outsideColor, t);
+        }
     }
     else if (DrawType == DRAW_BEZIER)
     {

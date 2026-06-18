@@ -63,7 +63,7 @@ uniform bool useDepth;
 
 out flat int DrawType;
 out flat int Flags;
-out flat vec4 Color;
+out flat vec4 Color0;
 out flat vec4 BorderColor;
 out flat vec4 ShadowColor;
 out flat vec4 Rect;
@@ -74,6 +74,7 @@ out flat vec2 ShadowOffset;
 out flat float Radius;
 out flat float Pad;
 out float RoundedRectDist;
+out float LineDist;
 
 vec4 unpackARGB(uint c)
 {
@@ -433,6 +434,23 @@ vec2 roundedRectVertex3(RectPayload payload, uint vertId, float pad1, float pad2
 
 vec2 linesVertex(LinesPayload payload, uint vertId)
 {
+    uint normalVertCount = uint(payload.lineNum) * 6u;
+
+    if (vertId < normalVertCount)
+    {
+        uint local = vertId % 6u;
+        LineDist = (local == 0u || local == 1u || local == 3u) ? 1.0 : 2.0;
+    }
+    else if (payload.formsLoop != 0)
+    {
+        uint local = (vertId - normalVertCount) % 6u;
+        LineDist = (local == 0u || local == 2u || local == 3u) ? 1.0 : 2.0;
+    }
+    else
+    {
+        LineDist = 0.0;
+    }
+
     return arenaVerts[payload.meshOffset + vertId];
 }
 
@@ -440,7 +458,7 @@ void initOut(int drawType, int flags)
 {
     DrawType = drawType;
     Flags = flags;
-    Color = vec4(0.0);
+    Color0 = vec4(0.0);
     BorderColor = vec4(0.0);
     ShadowColor = vec4(0.0);
     Rect = vec4(0.0);
@@ -451,6 +469,7 @@ void initOut(int drawType, int flags)
     Radius = 0.0;
     Pad = 0.0;
     RoundedRectDist = 0.0;
+    LineDist = 0.0;
 }
 
 void main()
@@ -521,13 +540,15 @@ void main()
         Rect = payload.rect;
         LocalPos = pos - payload.rect.xy;
         Radius = payload.radius;
-        Color = unpackARGB(payload.color);
+        Color0 = unpackARGB(payload.color);
     }
     else if (info.drawType == DRAW_LINES)
     {
         LinesPayload payload = linesPayloads[info.payloadIndex];
 
         pos = linesVertex(payload, uint(gl_VertexID));
+
+        Color0 = vec4(1.0, 0.0, 0.0, 1.0);
     }
     else if (info.drawType == DRAW_BEZIER)
     {
