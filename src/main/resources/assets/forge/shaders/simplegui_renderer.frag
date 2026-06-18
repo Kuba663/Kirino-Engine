@@ -251,7 +251,7 @@ void main()
     }
     else if (DrawType == DRAW_LINES)
     {
-
+        FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     }
     else if (DrawType == DRAW_BEZIER)
     {

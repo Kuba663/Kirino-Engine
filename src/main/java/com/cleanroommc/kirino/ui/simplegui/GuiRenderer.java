@@ -26,7 +26,7 @@ public class GuiRenderer {
     private static final int DRAW_INFO_STRIDE = 16;
     private static final int IDB_STRIDE = 16;
     private static final int RECT_PAYLOAD_STRIDE = 64;
-    private static final int LINES_PAYLOAD_STRIDE = 1;
+    private static final int LINES_PAYLOAD_STRIDE = 16;
     private static final int BEZIER_PAYLOAD_STRIDE = 1;
 
     private final ShaderProgram program;
@@ -59,6 +59,11 @@ public class GuiRenderer {
     private ByteBuffer rectPayloadWorkspace = null;
     private final SSBOView rectPayload;
 
+    // stride=16
+    // int lineNum
+    // int formsLoop
+    // int meshOffset (for lines; refers to transient arena)
+    // int vertexCount (for lines; refers to transient arena)
     private ByteBuffer linesPayloadWorkspace = null;
     private final SSBOView linesPayload;
 
@@ -291,7 +296,13 @@ public class GuiRenderer {
                 idbWorkspace.putInt(6);
             }
         } else if (op == SG_GuiOp.DRAW_LINES) {
-            idbWorkspace.putInt(0); // todo
+            int vertexNumPos = pos + SG_CmdHeader.HEADER_SIZE;
+            int vertexNum = buffer.getInt(vertexNumPos);
+            int formsLoopPos = pos + SG_CmdHeader.HEADER_SIZE + 8 + (vertexNum * 2) * 4;
+            boolean formsLoop = (buffer.get(formsLoopPos) != 0);
+            int lineNum = vertexNum - 1;
+            int vertexCount = lineNum * 6 + (formsLoop ? 6 : 0);
+            idbWorkspace.putInt(vertexCount);
         } else if (op == SG_GuiOp.DRAW_BEZIER) {
             idbWorkspace.putInt(0); // todo
         } else {
@@ -432,8 +443,38 @@ public class GuiRenderer {
         return payloadPos;
     }
 
-    private int writeLinesPayload(ByteBuffer buffer, int pos, int flags) {
-        return 0;
+    private int writeLinesPayload(ByteBuffer buffer, int pos, int used) {
+        int vertexNumPos = pos + SG_CmdHeader.HEADER_SIZE;
+        int vertexNum = buffer.getInt(vertexNumPos);
+        int formsLoopPos = pos + SG_CmdHeader.HEADER_SIZE + 8 + (vertexNum * 2) * 4;
+        boolean formsLoop = (buffer.get(formsLoopPos) != 0);
+        int lineNum = vertexNum - 1;
+
+        int meshOffsetPos = pos + used + SG_CmdHeader.TAIL_SIZE;
+        int vertexCountPos = pos + used + SG_CmdHeader.TAIL_SIZE + 4;
+        int meshOffset = buffer.getInt(meshOffsetPos);
+        int vertexCount = buffer.getInt(vertexCountPos);
+
+        int payloadPos = linesPayloadWorkspace.position();
+
+        // int lineNum
+        linesPayloadWorkspace.putInt(lineNum);
+
+        // int formsLoop
+        linesPayloadWorkspace.putInt(formsLoop ? 1 : 0);
+
+        // int meshOffset
+        linesPayloadWorkspace.putInt(meshOffset);
+
+        // int vertexCount
+        linesPayloadWorkspace.putInt(vertexCount);
+
+        int next = alignUp(linesPayloadWorkspace.position(), LINES_PAYLOAD_STRIDE);
+        while (linesPayloadWorkspace.position() < next) {
+            linesPayloadWorkspace.put((byte) 0);
+        }
+
+        return payloadPos;
     }
 
     private int writeBezierPayload(ByteBuffer buffer, int pos, int flags) {
@@ -473,7 +514,7 @@ public class GuiRenderer {
 
             } else if (op == SG_GuiOp.DRAW_LINES) {
                 count++;
-                int _pos = writeLinesPayload(view, pos, flags);
+                int _pos = writeLinesPayload(view, pos, used);
                 int __pos = writeDrawInfo(view, op, pos, flags, used, _pos);
                 writeIdb(view, op, pos, flags, used, __pos);
 
@@ -568,7 +609,8 @@ public class GuiRenderer {
 
         GL30.glBindBufferBase(drawInfo.target(), 0, drawInfo.bufferID);
         GL30.glBindBufferBase(rectPayload.target(), 1, rectPayload.bufferID);
-        GL30.glBindBufferBase(arenaSsbo.target(), 2, arenaSsbo.bufferID);
+        GL30.glBindBufferBase(linesPayload.target(), 2, linesPayload.bufferID);
+        GL30.glBindBufferBase(arenaSsbo.target(), 4, arenaSsbo.bufferID);
 
         program.use();
 

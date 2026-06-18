@@ -110,11 +110,40 @@ public class GuiCompiler {
 
         buffer.putInt(outputPos, meshOffset);
         buffer.putInt(outputPos + 4, vertexCount);
+
         buffer.putInt(pos + SG_CmdHeader.FLAGS, flags | SG_GuiOp.FLAG_COMPILED);
     }
 
     private void compileLines(ByteBuffer buffer, int pos, int flags, int used, int size) {
+        int vertexNumPos = pos + SG_CmdHeader.HEADER_SIZE;
+        int lineWidthPos = vertexNumPos + 4;
+        int vertexNum = buffer.getInt(vertexNumPos);
+        float lineWidth = buffer.getFloat(lineWidthPos);
+        int formsLoopPos = pos + SG_CmdHeader.HEADER_SIZE + 8 + (vertexNum * 2) * 4;
+        boolean formsLoop = (buffer.get(formsLoopPos) != 0);
 
+        float[] vertices = new float[vertexNum * 2];
+        int verticesStartPos = pos + SG_CmdHeader.HEADER_SIZE + 8;
+        for (int i = 0; i < vertexNum; i++) {
+            vertices[i * 2] = buffer.getFloat(verticesStartPos + i * 8);
+            vertices[i * 2 + 1] = buffer.getFloat(verticesStartPos + i * 8 + 4);
+        }
+
+        int[] out = new int[2];
+        buildLinesMesh(vertices, vertexNum, lineWidth, formsLoop, out);
+        int meshOffset = out[0]; // unit: vertex
+        int vertexCount = out[1];
+
+        Preconditions.checkState(used + SG_CmdHeader.TAIL_SIZE + 8 <= size,
+                "No reserved space for in-place rewrite (used=%s, want=%s, size=%s).",
+                used, used + SG_CmdHeader.TAIL_SIZE + 8, size);
+
+        int outputPos = pos + used + SG_CmdHeader.TAIL_SIZE;
+
+        buffer.putInt(outputPos, meshOffset);
+        buffer.putInt(outputPos + 4, vertexCount);
+
+        buffer.putInt(pos + SG_CmdHeader.FLAGS, flags | SG_GuiOp.FLAG_COMPILED);
     }
 
     private void compileBezier(ByteBuffer buffer, int pos, int flags, int used, int size) {
@@ -130,9 +159,48 @@ public class GuiCompiler {
     }
     //</editor-fold>
 
-    //<editor-fold desc="mesh building">
-    private static final int[] CURSOR = {0};
+    //<editor-fold desc="mesh building utils">
+    private static final float EPSILON = 1E-6f;
 
+    private static void putVertex(
+            ByteBuffer buffer,
+            int baseOffset,
+            int index,
+            float x,
+            float y) {
+
+        int pos = baseOffset + index * 8;
+
+        buffer.putFloat(pos, x);
+        buffer.putFloat(pos + 4, y);
+    }
+
+    private static float signedPow(float v, float power) {
+        if (v == 0f) {
+            return 0f;
+        }
+
+        return Math.copySign((float) Math.pow(Math.abs(v), power), v);
+    }
+
+    private static float nearZeroKeepSign(float value) {
+        if (Math.abs(value) >= EPSILON) {
+            return value;
+        }
+
+        return value < 0f ? -EPSILON : EPSILON;
+    }
+
+    private static boolean isTriCcw(float x1, float y1, float x2, float y2, float x3, float y3) {
+        return (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1) > 0f;
+    }
+
+    private static float cross(float x1, float y1, float x2, float y2) {
+        return x1 * y2 - y1 * x2;
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="rounded rect mesh building">
     private void buildRoundedRectMesh(
             float x,
             float y,
@@ -154,7 +222,7 @@ public class GuiCompiler {
 
         boolean circle = cornerType == 0 || cornerType == 1;
 
-        CURSOR[0] = 0;
+        int[] cursor = {0};
 
         float tlx = x + radius;
         float tly = y + radius;
@@ -183,12 +251,12 @@ public class GuiCompiler {
             putVertex(
                     view,
                     offset,
-                    CURSOR[0]++,
+                    cursor[0]++,
                     (tlx + trx) / 2f,
                     (tly + bly) / 2f);
 
             emitArc(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     tlx, tly,
                     radius,
                     (float) Math.PI,
@@ -196,7 +264,7 @@ public class GuiCompiler {
                     cornerVertCount);
 
             emitArc(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     trx, try_,
                     radius,
                     (float) Math.PI * 0.5f,
@@ -204,7 +272,7 @@ public class GuiCompiler {
                     cornerVertCount);
 
             emitArc(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     brx, bry,
                     radius,
                     0f,
@@ -212,7 +280,7 @@ public class GuiCompiler {
                     cornerVertCount);
 
             emitArc(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     blx, bly,
                     radius,
                     -(float) Math.PI * 0.5f,
@@ -237,12 +305,12 @@ public class GuiCompiler {
             putVertex(
                     view,
                     offset,
-                    CURSOR[0]++,
+                    cursor[0]++,
                     (tlx + trx) / 2f,
                     (tly + bly) / 2f);
 
             emitSuperellipseCorner(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     tlx, tly,
                     radius,
                     (float) Math.PI,
@@ -251,7 +319,7 @@ public class GuiCompiler {
                     cornerVertCount);
 
             emitSuperellipseCorner(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     trx, try_,
                     radius,
                     (float) Math.PI * 0.5f,
@@ -260,7 +328,7 @@ public class GuiCompiler {
                     cornerVertCount);
 
             emitSuperellipseCorner(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     brx, bry,
                     radius,
                     0f,
@@ -269,7 +337,7 @@ public class GuiCompiler {
                     cornerVertCount);
 
             emitSuperellipseCorner(
-                    view, offset, CURSOR,
+                    view, offset, cursor,
                     blx, bly,
                     radius,
                     -(float) Math.PI * 0.5f,
@@ -277,19 +345,6 @@ public class GuiCompiler {
                     superellipseN,
                     cornerVertCount);
         }
-    }
-
-    private static void putVertex(
-            ByteBuffer buffer,
-            int baseOffset,
-            int index,
-            float x,
-            float y) {
-
-        int pos = baseOffset + index * 8;
-
-        buffer.putFloat(pos, x);
-        buffer.putFloat(pos + 4, y);
     }
 
     private static void emitArc(
@@ -353,13 +408,343 @@ public class GuiCompiler {
                     py);
         }
     }
+    //</editor-fold>
 
-    private static float signedPow(float v, float power) {
-        if (v == 0f) {
-            return 0f;
+    //<editor-fold desc="lines mesh building">
+    public void buildLinesMesh(
+            float[] vertices,
+            int vertexNum,
+            float lineWidth,
+            boolean formsLoop,
+            int[] out) {
+
+        Preconditions.checkArgument(out.length == 2, "Length of \"out\" must be 2.");
+
+        int[] cursor = {0};
+
+        int lineNum = vertexNum - 1;
+        int vertexCount = lineNum * 6 + (formsLoop ? 6 : 0);
+        int size = vertexCount * 8;
+        int offset = arena.alloc(size, 8);
+        ByteBuffer view = arena.view();
+
+        out[0] = offset / 8; // unit: vertex
+        out[1] = vertexCount;
+
+        float[] lineNormalX = new float[vertexNum];
+        float[] lineNormalY = new float[vertexNum];
+
+        for (int i = 0; i < vertexNum - 1; i++) {
+            float x1 = vertices[i * 2];
+            float y1 = vertices[i * 2 + 1];
+            float x2 = vertices[(i + 1) * 2];
+            float y2 = vertices[(i + 1) * 2 + 1];
+
+            float dxN = -(y2 - y1);
+            float dyN = x2 - x1;
+            float len = (float) Math.sqrt(dxN * dxN + dyN * dyN);
+
+            lineNormalX[i] = dxN / nearZeroKeepSign(len);
+            lineNormalY[i] = dyN / nearZeroKeepSign(len);
         }
 
-        return Math.copySign((float) Math.pow(Math.abs(v), power), v);
+        if (formsLoop) {
+            float x1 = vertices[(vertexNum - 1) * 2];
+            float y1 = vertices[(vertexNum - 1) * 2 + 1];
+            float x2 = vertices[0];
+            float y2 = vertices[1];
+
+            float dxN = -(y2 - y1);
+            float dyN = x2 - x1;
+            float len = (float) Math.sqrt(dxN * dxN + dyN * dyN);
+
+            lineNormalX[vertexNum - 1] = dxN / nearZeroKeepSign(len);
+            lineNormalY[vertexNum - 1] = dyN / nearZeroKeepSign(len);
+        } else {
+            lineNormalX[vertexNum - 1] = lineNormalX[vertexNum - 2];
+            lineNormalY[vertexNum - 1] = lineNormalY[vertexNum - 2];
+        }
+
+        float[] vertexNormalX = new float[vertexNum * 2];
+        float[] vertexNormalY = new float[vertexNum * 2];
+
+        float[] outNormal = new float[2];
+        for (int i = 0; i < vertexNum; i++) {
+            float normalX1;
+            float normalY1;
+            float normalX2;
+            float normalY2;
+
+            if (i == 0 || i == vertexNum - 1) {
+                normalX1 = lineNormalX[i] * lineWidth / 2f;
+                normalY1 = lineNormalY[i] * lineWidth / 2f;
+                normalX2 = -normalX1;
+                normalY2 = -normalY1;
+            } else {
+                getJoinNormal(vertices, lineNormalX, lineNormalY, i, lineWidth, 1f, outNormal);
+                normalX1 = outNormal[0];
+                normalY1 = outNormal[1];
+
+                getJoinNormal(vertices, lineNormalX, lineNormalY, i, lineWidth, -1f, outNormal);
+                normalX2 = outNormal[0];
+                normalY2 = outNormal[1];
+            }
+
+            vertexNormalX[i * 2] = normalX1;
+            vertexNormalY[i * 2] = normalY1;
+            vertexNormalX[i * 2 + 1] = normalX2;
+            vertexNormalY[i * 2 + 1] = normalY2;
+        }
+
+        if (formsLoop) {
+            fixLoopJoinNormal(vertices, vertexNum, lineNormalX, lineNormalY, lineWidth, vertexNormalX, vertexNormalY);
+        }
+
+        for (int i = 0; i < lineNum; i++) {
+            int i1 = i * 2;
+            int i2 = i * 2 + 1;
+            int i3 = i * 2 + 2;
+            int i4 = i * 2 + 3;
+
+            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i1, i3, i2);
+            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i3, i4, i2);
+        }
+
+        if (formsLoop) {
+            int i1 = 0;
+            int i2 = 1;
+            int i3 = vertexNum * 2 - 2;
+            int i4 = vertexNum * 2 - 1;
+
+            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i1, i2, i3);
+            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i3, i2, i4);
+        }
+    }
+
+    private static void fixLoopJoinNormal(
+            float[] vertices,
+            int vertexNum,
+            float[] lineNormalX,
+            float[] lineNormalY,
+            float lineWidth,
+            float[] vertexNormalX,
+            float[] vertexNormalY) {
+
+        float[] outNormal = new float[2];
+
+        getLoopJoinNormal(vertices, vertexNum, lineNormalX, lineNormalY, lineWidth, 0, 1f, outNormal);
+        vertexNormalX[0] = outNormal[0];
+        vertexNormalY[0] = outNormal[1];
+
+        getLoopJoinNormal(vertices, vertexNum, lineNormalX, lineNormalY, lineWidth, 0, -1f, outNormal);
+        vertexNormalX[1] = outNormal[0];
+        vertexNormalY[1] = outNormal[1];
+
+        int lastVertexIndex = vertexNum - 1;
+        int lastBase = lastVertexIndex * 2;
+
+        getLoopJoinNormal(vertices, vertexNum, lineNormalX, lineNormalY, lineWidth, lastVertexIndex, 1f, outNormal);
+        vertexNormalX[lastBase] = outNormal[0];
+        vertexNormalY[lastBase] = outNormal[1];
+
+        getLoopJoinNormal(vertices, vertexNum, lineNormalX, lineNormalY, lineWidth, lastVertexIndex, -1f, outNormal);
+        vertexNormalX[lastBase + 1] = outNormal[0];
+        vertexNormalY[lastBase + 1] = outNormal[1];
+    }
+
+    private static void getLoopJoinNormal(
+            float[] vertices,
+            int vertexNum,
+            float[] lineNormalX,
+            float[] lineNormalY,
+            float lineWidth,
+            int i,
+            float side,
+            float[] out) {
+
+        float halfWidth = lineWidth / 2f;
+
+        int prevIndex;
+        int nextIndex;
+        int prevLineIndex;
+        int nextLineIndex;
+
+        if (i == 0) {
+            prevIndex = vertexNum - 1;
+            nextIndex = 1;
+            prevLineIndex = vertexNum - 1;
+            nextLineIndex = 0;
+        } else {
+            prevIndex = vertexNum - 2;
+            nextIndex = 0;
+            prevLineIndex = vertexNum - 2;
+            nextLineIndex = vertexNum - 1;
+        }
+
+        float x0 = vertices[prevIndex * 2];
+        float y0 = vertices[prevIndex * 2 + 1];
+        float x1 = vertices[i * 2];
+        float y1 = vertices[i * 2 + 1];
+        float x2 = vertices[nextIndex * 2];
+        float y2 = vertices[nextIndex * 2 + 1];
+
+        float n0x = lineNormalX[prevLineIndex] * halfWidth * side;
+        float n0y = lineNormalY[prevLineIndex] * halfWidth * side;
+        float n1x = lineNormalX[nextLineIndex] * halfWidth * side;
+        float n1y = lineNormalY[nextLineIndex] * halfWidth * side;
+
+        float ax = x0 + n0x;
+        float ay = y0 + n0y;
+        float bx = x1 + n0x;
+        float by = y1 + n0y;
+
+        float cx = x1 + n1x;
+        float cy = y1 + n1y;
+        float dx = x2 + n1x;
+        float dy = y2 + n1y;
+
+        float rx = bx - ax;
+        float ry = by - ay;
+        float sx = dx - cx;
+        float sy = dy - cy;
+
+        float denom = cross(rx, ry, sx, sy);
+
+        if (Math.abs(denom) < EPSILON) {
+            float nx = lineNormalX[prevLineIndex] + lineNormalX[nextLineIndex];
+            float ny = lineNormalY[prevLineIndex] + lineNormalY[nextLineIndex];
+
+            float len = (float) Math.sqrt(nx * nx + ny * ny);
+
+            if (Math.abs(len) < EPSILON) {
+                nx = lineNormalX[nextLineIndex];
+                ny = lineNormalY[nextLineIndex];
+                len = (float) Math.sqrt(nx * nx + ny * ny);
+            }
+
+            out[0] = nx / nearZeroKeepSign(len) * halfWidth * side;
+            out[1] = ny / nearZeroKeepSign(len) * halfWidth * side;
+            return;
+        }
+
+        float qpx = cx - ax;
+        float qpy = cy - ay;
+
+        float t = cross(qpx, qpy, sx, sy) / denom;
+
+        float intersectX = ax + rx * t;
+        float intersectY = ay + ry * t;
+
+        out[0] = intersectX - x1;
+        out[1] = intersectY - y1;
+    }
+
+    private static void getJoinNormal(
+            float[] vertices,
+            float[] lineNormalX,
+            float[] lineNormalY,
+            int i,
+            float lineWidth,
+            float side,
+            float[] out) {
+
+        float halfWidth = lineWidth / 2f;
+
+        float x0 = vertices[(i - 1) * 2];
+        float y0 = vertices[(i - 1) * 2 + 1];
+        float x1 = vertices[i * 2];
+        float y1 = vertices[i * 2 + 1];
+        float x2 = vertices[(i + 1) * 2];
+        float y2 = vertices[(i + 1) * 2 + 1];
+
+        float n0x = lineNormalX[i - 1] * halfWidth * side;
+        float n0y = lineNormalY[i - 1] * halfWidth * side;
+        float n1x = lineNormalX[i] * halfWidth * side;
+        float n1y = lineNormalY[i] * halfWidth * side;
+
+        float ax = x0 + n0x;
+        float ay = y0 + n0y;
+        float bx = x1 + n0x;
+        float by = y1 + n0y;
+
+        float cx = x1 + n1x;
+        float cy = y1 + n1y;
+        float dx = x2 + n1x;
+        float dy = y2 + n1y;
+
+        float rx = bx - ax;
+        float ry = by - ay;
+        float sx = dx - cx;
+        float sy = dy - cy;
+
+        float denom = cross(rx, ry, sx, sy);
+
+        if (Math.abs(denom) < EPSILON) {
+            float nx = lineNormalX[i - 1] + lineNormalX[i];
+            float ny = lineNormalY[i - 1] + lineNormalY[i];
+
+            float len = (float) Math.sqrt(nx * nx + ny * ny);
+
+            if (Math.abs(len) < EPSILON) {
+                nx = lineNormalX[i];
+                ny = lineNormalY[i];
+                len = (float) Math.sqrt(nx * nx + ny * ny);
+            }
+
+            out[0] = nx / nearZeroKeepSign(len) * halfWidth * side;
+            out[1] = ny / nearZeroKeepSign(len) * halfWidth * side;
+            return;
+        }
+
+        float qpx = cx - ax;
+        float qpy = cy - ay;
+
+        float t = cross(qpx, qpy, sx, sy) / denom;
+
+        float intersectX = ax + rx * t;
+        float intersectY = ay + ry * t;
+
+        out[0] = intersectX - x1;
+        out[1] = intersectY - y1;
+    }
+
+    private static float getExpandedVertX(float[] vertices, float[] vertexNormalX, int index) {
+        int vertexIndex = index / 2;
+        return vertices[vertexIndex * 2] + vertexNormalX[index];
+    }
+
+    private static float getExpandedVertY(float[] vertices, float[] vertexNormalY, int index) {
+        int vertexIndex = index / 2;
+        return vertices[vertexIndex * 2 + 1] + vertexNormalY[index];
+    }
+
+    private static void emitTriangle(
+            ByteBuffer buffer,
+            int baseOffset,
+            int[] cursor,
+            float[] vertices,
+            float[] vertexNormalX,
+            float[] vertexNormalY,
+            int i1,
+            int i2,
+            int i3) {
+
+        float x1 = getExpandedVertX(vertices, vertexNormalX, i1);
+        float y1 = getExpandedVertY(vertices, vertexNormalY, i1);
+        float x2 = getExpandedVertX(vertices, vertexNormalX, i2);
+        float y2 = getExpandedVertY(vertices, vertexNormalY, i2);
+        float x3 = getExpandedVertX(vertices, vertexNormalX, i3);
+        float y3 = getExpandedVertY(vertices, vertexNormalY, i3);
+
+        if (isTriCcw(x1, y1, x2, y2, x3, y3)) {
+            putVertex(buffer, baseOffset, cursor[0]++, x1, y1);
+            putVertex(buffer, baseOffset, cursor[0]++, x2, y2);
+            putVertex(buffer, baseOffset, cursor[0]++, x3, y3);
+        } else {
+            putVertex(buffer, baseOffset, cursor[0]++, x1, y1);
+            putVertex(buffer, baseOffset, cursor[0]++, x3, y3);
+            putVertex(buffer, baseOffset, cursor[0]++, x2, y2);
+        }
     }
     //</editor-fold>
 }

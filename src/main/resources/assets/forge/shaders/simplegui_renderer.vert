@@ -30,6 +30,14 @@ struct RectPayload
     float radius;
 };
 
+struct LinesPayload
+{
+    int lineNum;
+    int formsLoop;
+    int meshOffset;
+    int vertexCount;
+};
+
 layout(std430, binding = 0) readonly buffer DrawInfos
 {
     DrawInfo drawInfos[];
@@ -40,7 +48,12 @@ layout(std430, binding = 1) readonly buffer RectPayloads
     RectPayload rectPayloads[];
 };
 
-layout(std430, binding = 2) readonly buffer ArenaVerts
+layout(std430, binding = 2) readonly buffer LinesPayloads
+{
+    LinesPayload linesPayloads[];
+};
+
+layout(std430, binding = 4) readonly buffer ArenaVerts
 {
     vec2 arenaVerts[];
 };
@@ -418,6 +431,11 @@ vec2 roundedRectVertex3(RectPayload payload, uint vertId, float pad1, float pad2
     return pos + outward * pad2;
 }
 
+vec2 linesVertex(LinesPayload payload, uint vertId)
+{
+    return arenaVerts[payload.meshOffset + vertId];
+}
+
 void initOut(int drawType, int flags)
 {
     DrawType = drawType;
@@ -476,14 +494,13 @@ void main()
             }
             else if (!hasBorder && hasShadow)
             {
-                float pad = max(abs(payload.shadow.x), abs(payload.shadow.y));
+                float pad = max(0.01, sqrt(payload.shadow.x * payload.shadow.x + payload.shadow.y * payload.shadow.y));
                 pos = roundedRectVertex2(payload, uint(gl_VertexID), pad);
             }
             else if (hasBorder && hasShadow)
             {
                 float pad1 = abs(payload.borderWidth);
-                float pad2 = max(abs(payload.shadow.x), abs(payload.shadow.y)) + pad1;
-                pad2 = pad2 <= pad1 ? pad1 + 0.1 : pad2;
+                float pad2 = max(0.01, sqrt(payload.shadow.x * payload.shadow.x + payload.shadow.y * payload.shadow.y)) + pad1;
                 pos = roundedRectVertex3(payload, uint(gl_VertexID), pad1, pad2);
             }
         }
@@ -508,7 +525,9 @@ void main()
     }
     else if (info.drawType == DRAW_LINES)
     {
+        LinesPayload payload = linesPayloads[info.payloadIndex];
 
+        pos = linesVertex(payload, uint(gl_VertexID));
     }
     else if (info.drawType == DRAW_BEZIER)
     {

@@ -155,4 +155,25 @@ public class GuiCommandStream {
 
         end(start);
     }
+
+    @NonNull
+    public CmdLinesBuilder lines(int vertexNum, float lineWidth, boolean formsLoop) {
+        return new CmdLinesBuilder(this, vertexNum, lineWidth, formsLoop);
+    }
+
+    void writeLines(int vertexNum, float lineWidth, float[] vertices, boolean formsLoop) {
+        int payload = 8 + vertices.length * 4 + 1;
+
+        // plus 2 ints (meshOffset + vertexCount)
+        int start = begin(SG_GuiOp.DRAW_LINES, 0, payload, SG_CmdHeader.TAIL_SIZE + 8);
+
+        buffer.putInt(vertexNum);
+        buffer.putFloat(lineWidth);
+        for (float f : vertices) {
+            buffer.putFloat(f);
+        }
+        buffer.put((byte) (formsLoop ? 1 : 0));
+
+        end(start);
+    }
 }
