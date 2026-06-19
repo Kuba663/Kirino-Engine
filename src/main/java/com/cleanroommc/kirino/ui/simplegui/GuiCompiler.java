@@ -131,8 +131,8 @@ public class GuiCompiler {
 
         int[] out = new int[2];
         buildLinesMesh(vertices, vertexNum, lineWidth, formsLoop, out);
-        int meshOffset = out[0]; // unit: vertex
-        int vertexCount = out[1];
+        int meshOffset0 = out[0]; // unit: vertex
+        int meshOffset1 = out[1]; // unit: vertex
 
         Preconditions.checkState(used + SG_CmdHeader.TAIL_SIZE + 8 <= size,
                 "No reserved space for in-place rewrite (used=%s, want=%s, size=%s).",
@@ -140,8 +140,8 @@ public class GuiCompiler {
 
         int outputPos = pos + used + SG_CmdHeader.TAIL_SIZE;
 
-        buffer.putInt(outputPos, meshOffset);
-        buffer.putInt(outputPos + 4, vertexCount);
+        buffer.putInt(outputPos, meshOffset0);
+        buffer.putInt(outputPos + 4, meshOffset1);
 
         buffer.putInt(pos + SG_CmdHeader.FLAGS, flags | SG_GuiOp.FLAG_COMPILED);
     }
@@ -512,7 +512,7 @@ public class GuiCompiler {
     //</editor-fold>
 
     //<editor-fold desc="lines mesh building">
-    public void buildLinesMesh(
+    private void buildLinesMesh(
             float[] vertices,
             int vertexNum,
             float lineWidth,
@@ -524,13 +524,19 @@ public class GuiCompiler {
         int[] cursor = {0};
 
         int lineNum = vertexNum - 1;
-        int vertexCount = lineNum * 6 + (formsLoop ? 6 : 0);
-        int size = vertexCount * 8;
+        int vertexCount = (formsLoop ? lineNum + 1 : lineNum) * 6;
+
+        // store length of every line seg (compact storing)
+        int lineSegLenSlotCount = ((formsLoop ? lineNum + 1 : lineNum) % 2 == 0) ?
+                (formsLoop ? lineNum + 1 : lineNum) / 2 : ((formsLoop ? lineNum + 1 : lineNum) / 2) + 1;
+        lineSegLenSlotCount += 1; // first slot for the total length
+
+        int size = (vertexCount + lineSegLenSlotCount) * 8;
         int offset = arena.alloc(size, 8);
         ByteBuffer view = arena.view();
 
         out[0] = offset / 8; // unit: vertex
-        out[1] = vertexCount;
+        out[1] = out[0] + vertexCount; // unit: vertex
 
         float[] lineNormalX = new float[vertexNum];
         float[] lineNormalY = new float[vertexNum];
@@ -617,8 +623,57 @@ public class GuiCompiler {
             int i3 = vertexNum * 2 - 2;
             int i4 = vertexNum * 2 - 1;
 
-            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i1, i2, i3);
-            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i3, i2, i4);
+            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i1, i3, i2);
+            emitTriangle(view, offset, cursor, vertices, vertexNormalX, vertexNormalY, i3, i4, i2);
+        }
+
+        float[] lineSegLen = new float[formsLoop ? lineNum + 1 : lineNum];
+        for (int i = 0; i < vertexNum - 1; i++) {
+            float x1 = vertices[i * 2];
+            float y1 = vertices[i * 2 + 1];
+            float x2 = vertices[(i + 1) * 2];
+            float y2 = vertices[(i + 1) * 2 + 1];
+
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float len = (float) Math.sqrt(dx * dx + dy * dy);
+            lineSegLen[i] = len;
+        }
+
+        if (formsLoop) {
+            float x1 = vertices[(vertexNum - 1) * 2];
+            float y1 = vertices[(vertexNum - 1) * 2 + 1];
+            float x2 = vertices[0];
+            float y2 = vertices[1];
+
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float len = (float) Math.sqrt(dx * dx + dy * dy);
+            lineSegLen[lineSegLen.length - 1] = len;
+        }
+
+        float totalLength = 0f;
+        for (int i = 0; i < lineSegLen.length; i++) {
+            totalLength += lineSegLen[i];
+            if (i > 0) {
+                lineSegLen[i] += lineSegLen[i - 1];
+            }
+        }
+
+        putVertex(
+                view,
+                offset,
+                cursor[0]++,
+                totalLength,
+                0f);
+
+        for (int i = 0; i < lineSegLenSlotCount - 1; i++) {
+            putVertex(
+                    view,
+                    offset,
+                    cursor[0]++,
+                    lineSegLen[i * 2],
+                    (lineSegLen.length >= i * 2 + 2) ? lineSegLen[i * 2 + 1] : 0f);
         }
     }
 

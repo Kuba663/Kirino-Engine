@@ -34,8 +34,8 @@ struct LinesPayload
 {
     int lineNum;
     int formsLoop;
-    int meshOffset;
-    int vertexCount;
+    int meshOffset0;
+    int meshOffset1;
 };
 
 layout(std430, binding = 0) readonly buffer DrawInfos
@@ -75,6 +75,8 @@ out flat float Radius;
 out flat float Pad;
 out float RoundedRectDist;
 out float LineDist;
+out float LineProgress;
+out flat float TotalLineLength;
 
 vec4 unpackARGB(uint c)
 {
@@ -436,22 +438,51 @@ vec2 linesVertex(LinesPayload payload, uint vertId)
 {
     uint normalVertCount = uint(payload.lineNum) * 6u;
 
+    uint local;
+    uint seg;
+
     if (vertId < normalVertCount)
     {
-        uint local = vertId % 6u;
-        LineDist = (local == 0u || local == 1u || local == 3u) ? 1.0 : 2.0;
+        local = vertId % 6u;
+        seg = vertId / 6u;
     }
     else if (payload.formsLoop != 0)
     {
-        uint local = (vertId - normalVertCount) % 6u;
-        LineDist = (local == 0u || local == 2u || local == 3u) ? 1.0 : 2.0;
+        local = (vertId - normalVertCount) % 6u;
+        seg = uint(payload.lineNum);
     }
     else
     {
         LineDist = 0.0;
+        LineProgress = 0.0;
     }
 
-    return arenaVerts[payload.meshOffset + vertId];
+    vec2 slot = arenaVerts[payload.meshOffset1 + 1u + seg / 2u];
+    float segLen = (seg % 2u == 0) ? slot.x : slot.y;
+    float prevSegLen;
+    if (seg == 0u)
+    {
+        prevSegLen = 0.0;
+    }
+    else
+    {
+        vec2 prevSlot = arenaVerts[payload.meshOffset1 + 1u + (seg - 1) / 2u];
+        prevSegLen = ((seg - 1) % 2u == 0) ? prevSlot.x : prevSlot.y;
+    }
+
+    float start = prevSegLen;
+    float end = segLen;
+    if (vertId >= normalVertCount && payload.formsLoop != 0)
+    {
+        float swap = start;
+        start = end;
+        end = swap;
+    }
+
+    LineDist = (local == 0u || local == 1u || local == 3u) ? 1.0 : 2.0;
+    LineProgress = (local == 0u || local == 2u || local == 5u) ? start : end;
+
+    return arenaVerts[payload.meshOffset0 + vertId];
 }
 
 void initOut(int drawType, int flags)
@@ -470,6 +501,8 @@ void initOut(int drawType, int flags)
     Pad = 0.0;
     RoundedRectDist = 0.0;
     LineDist = 0.0;
+    LineProgress = 0.0;
+    TotalLineLength = 0.0;
 }
 
 void main()
@@ -548,6 +581,7 @@ void main()
 
         pos = linesVertex(payload, uint(gl_VertexID));
 
+        TotalLineLength = arenaVerts[payload.meshOffset1].x;
         Color0 = vec4(1.0, 0.0, 0.0, 1.0);
     }
     else if (info.drawType == DRAW_BEZIER)

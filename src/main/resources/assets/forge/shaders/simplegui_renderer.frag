@@ -22,6 +22,8 @@ in flat float Radius;
 in flat float Pad;
 in float RoundedRectDist;
 in float LineDist;
+in float LineProgress;
+in flat float TotalLineLength;
 
 out vec4 FragColor;
 
@@ -255,7 +257,7 @@ void main()
         float aaWidth = fwidth(LineDist);
         aaWidth = max(aaWidth, 0.01);
 
-        vec4 targetColor = Color0;
+        vec4 targetColor = mix(Color0, vec4(0.0, 1.0, 0.0, 1.0), LineProgress / TotalLineLength);
 
         if (LineDist < 1.0 + aaWidth)
         {

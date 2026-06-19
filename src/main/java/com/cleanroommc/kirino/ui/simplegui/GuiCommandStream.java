@@ -164,7 +164,7 @@ public class GuiCommandStream {
     void writeLines(int vertexNum, float lineWidth, float[] vertices, boolean formsLoop) {
         int payload = 8 + vertices.length * 4 + 1;
 
-        // plus 2 ints (meshOffset + vertexCount)
+        // plus 2 ints (meshOffset0 + meshOffset1)
         int start = begin(SG_GuiOp.DRAW_LINES, 0, payload, SG_CmdHeader.TAIL_SIZE + 8);
 
         buffer.putInt(vertexNum);

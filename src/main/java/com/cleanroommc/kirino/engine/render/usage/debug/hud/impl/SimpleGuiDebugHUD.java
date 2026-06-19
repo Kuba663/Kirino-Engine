@@ -128,7 +128,7 @@ public class SimpleGuiDebugHUD implements ImmediateHUD {
 
         ICS.instance().gui().begin()
                 .append((s) -> {
-                    s.lines(3, 4f, false)
+                    s.lines(3, 4f, true)
                             .put(100, 100)
                             .put(120, 120)
                             .put(140, 100)
@@ -140,6 +140,11 @@ public class SimpleGuiDebugHUD implements ImmediateHUD {
                             .put(165, 130)
                             .put(170, 100)
                             .put(175, 130)
+                            .emit();
+                    s.lines(3, 4f, false)
+                            .put(100, 140)
+                            .put(105, 160)
+                            .put(180, 140)
                             .emit();
                 })
                 .endDraw();

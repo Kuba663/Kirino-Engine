@@ -62,8 +62,8 @@ public class GuiRenderer {
     // stride=16
     // int lineNum
     // int formsLoop
-    // int meshOffset (for lines; refers to transient arena)
-    // int vertexCount (for lines; refers to transient arena)
+    // int meshOffset0 (for lines; refers to transient arena)
+    // int meshOffset1 (for lines; refers to transient arena)
     private ByteBuffer linesPayloadWorkspace = null;
     private final SSBOView linesPayload;
 
