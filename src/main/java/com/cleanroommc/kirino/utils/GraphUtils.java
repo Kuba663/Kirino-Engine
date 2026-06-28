@@ -82,7 +82,7 @@ public final class GraphUtils {
             colors.put(currVertex, currColor); // Set color
             // Push adjacent vertices to coloring queue
             for (V v : adj) {
-                if (colors.get(v) != -1) {
+                if (colors.get(v) == -1) {
                     verticesToColor.remove(new VertexInfo<>(adjColors.get(v).size(),
                             degrees.get(v), v));
                     adjColors.put(v, currColor);
