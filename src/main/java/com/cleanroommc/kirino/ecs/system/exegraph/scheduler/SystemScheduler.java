@@ -92,7 +92,7 @@ public final class SystemScheduler {
     }
 
     public <TFlowGraph extends SystemExeFlowGraph> Builder<TFlowGraph> scheduleSystemExecution(
-            Builder<TFlowGraph> builder) {
+            Builder<TFlowGraph> builder, String... stageNames) {
         final int colors = Runtime.getRuntime().availableProcessors();
         Graph<Vertex> disjointed = this.graph.buildDisjointedGraph();
         Optional<Map<Vertex, Integer>> colored = GraphUtils.colorGraph(disjointed, colors);
@@ -104,10 +104,14 @@ public final class SystemScheduler {
             for (Map.Entry<Vertex, Integer> entry : colored.get().entrySet()) {
                 colorQueues[entry.getValue()].enqueue(entry.getKey());
             }
-            for (int i = colors; i < colorQueues.length; i++) {
-                while (!colorQueues[i].isEmpty()) {
-                    Vertex vertex = colorQueues[i].dequeue();
-                    // TODO: implement the actual building
+            for (int i = -1; i < stageNames.length; i++) {
+                for (int j = 0; j < colorQueues.length; j++) {
+                    while (!colorQueues[i].isEmpty()) {
+                        Vertex vertex = colorQueues[i].dequeue();
+                        String from = i != -1 ? stageNames[i] : SystemExeFlowGraph.START_NODE;
+                        String to = i != stageNames.length-1 ? stageNames[i+1] : SystemExeFlowGraph.END_NODE;
+                        builder.addTransition(vertex.system, from, to);
+                    }
                 }
             }
         }
