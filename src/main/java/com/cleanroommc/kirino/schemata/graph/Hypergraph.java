@@ -125,16 +125,16 @@ public class Hypergraph<V,E> {
             for (V tmp : vertices) {
                 if (!tmp.equals(vertex)
                         && !neighbours.contains(tmp)
-                        && !bannedRelationships.containsEntry(vertex, tmp)) {
-                    if (canReach(tmp, vertex)) {
+                        && !bannedRelationships.containsEntry(vertex, tmp)
+                        && !bannedRelationships.containsEntry(tmp, vertex)) {
+                    if (canReach(vertex, tmp)
+                        || canReach(tmp, vertex)) {
                         bannedRelationships.put(vertex, tmp);
                         bannedRelationships.put(tmp, vertex);
                         continue;
                     }
                     builder.addNode(tmp);
                     builder.putEdge(vertex, tmp);
-                    neighbours.add(tmp);
-                    neighbours.addAll(vertexToVertexDependencies.adjacentNodes(tmp));
                 }
             }
         }

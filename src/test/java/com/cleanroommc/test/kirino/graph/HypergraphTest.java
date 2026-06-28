@@ -25,12 +25,25 @@ public class HypergraphTest {
         assertTrue(disjointed.hasEdgeConnecting(2,3));
         assertTrue(disjointed.hasEdgeConnecting(2,4));
         assertTrue(disjointed.hasEdgeConnecting(2,5));
-        assertTrue(disjointed.hasEdgeConnecting(1,3));
+        assertFalse(disjointed.hasEdgeConnecting(0,1));
+        assertFalse(disjointed.hasEdgeConnecting(0,2));
+        assertFalse(disjointed.hasEdgeConnecting(1,2));
+        assertFalse(disjointed.hasEdgeConnecting(1,3));
+        assertFalse(disjointed.hasEdgeConnecting(1,5));
+        assertFalse(disjointed.hasEdgeConnecting(3,4));
+        assertFalse(disjointed.hasEdgeConnecting(3,5));
     }
 
     @Test
     public void testVertexDependencies() {
         Hypergraph<Integer, Integer> graph = new Hypergraph<>();
+        graph.add(0,0);
+        graph.add(1,1);
+        graph.add(2,2);
+        graph.add(3,3);
+        graph.add(4,4);
+        graph.add(5,5);
+        graph.add(6,6);
         graph.addVertexDependency(0,1);
         graph.addVertexDependency(1,2);
         graph.addVertexDependency(2,3);
@@ -41,20 +54,10 @@ public class HypergraphTest {
         assertTrue(disjointed.hasEdgeConnecting(0,4));
         assertTrue(disjointed.hasEdgeConnecting(1,5));
         assertTrue(disjointed.hasEdgeConnecting(2,6));
-        assertFalse(disjointed.hasEdgeConnecting(0,5));
-        assertFalse(disjointed.hasEdgeConnecting(0,6));
-        assertFalse(disjointed.hasEdgeConnecting(1,4));
-        assertFalse(disjointed.hasEdgeConnecting(1,6));
-        assertFalse(disjointed.hasEdgeConnecting(2,4));
-        assertFalse(disjointed.hasEdgeConnecting(2,5));
-        assertFalse(disjointed.hasEdgeConnecting(0,1));
-        assertFalse(disjointed.hasEdgeConnecting(0,2));
-        assertFalse(disjointed.hasEdgeConnecting(0,3));
-        assertFalse(disjointed.hasEdgeConnecting(1,2));
-        assertFalse(disjointed.hasEdgeConnecting(1,3));
-        assertFalse(disjointed.hasEdgeConnecting(2,3));
-        assertFalse(disjointed.hasEdgeConnecting(4,5));
-        assertFalse(disjointed.hasEdgeConnecting(4,6));
-        assertFalse(disjointed.hasEdgeConnecting(5,6));
+        for (int i = 0; i <= 6; i++) {
+            if (i != 3) {
+                assertFalse(disjointed.hasEdgeConnecting(i,3));
+            }
+        }
     }
 }
