@@ -89,7 +89,7 @@ public final class SystemScheduler {
      * This created a directed relation.
      * @param dependency System that is being depended on.
      * @param dependent The system that depends on dependency.
-     * @see Hypergraph#addVertexDependency(Object, Object) 
+     * @see Hypergraph#addVertexDependency(Object, Object)
      */
     public void dependency(@NonNull CleanSystem dependency, @NonNull CleanSystem dependent) {
         Preconditions.checkNotNull(dependency);
@@ -113,11 +113,11 @@ public final class SystemScheduler {
                 colorQueues[entry.getValue()].enqueue(entry.getKey());
             }
             for (int i = -1; i < stageNames.length; i++) {
-                for (int j = 0; j < colorQueues.length; j++) {
-                    if (!colorQueues[j].isEmpty()) {
-                        Vertex vertex = colorQueues[i].dequeue();
+                for (PriorityQueue<Vertex> colorQueue : colorQueues) {
+                    if (!colorQueue.isEmpty()) {
+                        Vertex vertex = colorQueue.dequeue();
                         String from = i != -1 ? stageNames[i] : SystemExeFlowGraph.START_NODE;
-                        String to = i != stageNames.length-1 ? stageNames[i+1] : SystemExeFlowGraph.END_NODE;
+                        String to = i != stageNames.length - 1 ? stageNames[i + 1] : SystemExeFlowGraph.END_NODE;
                         builder.addTransition(vertex.system, from, to);
                     }
                 }
