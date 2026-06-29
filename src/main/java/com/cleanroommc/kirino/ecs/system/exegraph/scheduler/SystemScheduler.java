@@ -83,6 +83,14 @@ public final class SystemScheduler {
         graph.add(new Edge(resourceDependency), new Vertex(system, priority));
     }
 
+    /**
+     * Adds a system-system dependency. Systems that are not in the
+     * hypergraph will not be added. TODO: Fix that.
+     * This created a directed relation.
+     * @param dependency System that is being depended on.
+     * @param dependent The system that depends on dependency.
+     * @see Hypergraph#addVertexDependency(Object, Object) 
+     */
     public void dependency(@NonNull CleanSystem dependency, @NonNull CleanSystem dependent) {
         Preconditions.checkNotNull(dependency);
         Preconditions.checkNotNull(dependent);
