@@ -23,7 +23,6 @@ import static com.cleanroommc.kirino.ecs.system.exegraph.SystemExeFlowGraph.Buil
 public final class SystemScheduler {
 
     private final Hypergraph<Vertex, Edge> graph;
-    private final Map<CleanSystem, Integer> priorities;
     private final ComponentRegistry componentRegistry;
     private final int resourceCount;
 
@@ -33,7 +32,6 @@ public final class SystemScheduler {
         Preconditions.checkNotNull(layout);
 
         this.componentRegistry = componentRegistry;
-        priorities = new Object2IntArrayMap<>();
 
         //<editor-fold desc="Get Resource Count">
         try {
@@ -62,7 +60,6 @@ public final class SystemScheduler {
         Preconditions.checkNotNull(componentDependency);
         Preconditions.checkArgument(componentRegistry.componentExists(componentDependency));
 
-        priorities.put(system, priority);
         graph.add(new Edge(componentDependency), new Vertex(system, priority));
     }
 
@@ -79,24 +76,7 @@ public final class SystemScheduler {
         Preconditions.checkState(priority >= 0);
         Preconditions.checkPositionIndex(resourceDependency, resourceCount);
 
-        priorities.put(system, priority);
         graph.add(new Edge(resourceDependency), new Vertex(system, priority));
-    }
-
-    /**
-     * Adds a system-system dependency. Systems that are not in the
-     * hypergraph will not be added. TODO: Fix that.
-     * This created a directed relation.
-     * @param dependency System that is being depended on.
-     * @param dependent The system that depends on dependency.
-     * @see Hypergraph#addVertexDependency(Object, Object)
-     */
-    public void dependency(@NonNull CleanSystem dependency, @NonNull CleanSystem dependent) {
-        Preconditions.checkNotNull(dependency);
-        Preconditions.checkNotNull(dependent);
-
-        graph.addVertexDependency(new Vertex(dependency, priorities.get(dependency)),
-                new Vertex(dependent, priorities.get(dependent)));
     }
 
     public <TFlowGraph extends SystemExeFlowGraph> Builder<TFlowGraph> scheduleSystemExecution(
