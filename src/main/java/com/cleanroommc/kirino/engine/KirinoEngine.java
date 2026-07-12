@@ -28,6 +28,7 @@ import com.cleanroommc.kirino.engine.render.core.staging.StagingBufferManager;
 import com.cleanroommc.kirino.engine.resource.ResourceLayout;
 import com.cleanroommc.kirino.engine.resource.ResourceSlot;
 import com.cleanroommc.kirino.engine.resource.ResourceStorage;
+import com.cleanroommc.kirino.engine.semantic.KnowledgeRuntime;
 import com.cleanroommc.kirino.engine.world.ModuleInstaller;
 import com.cleanroommc.kirino.engine.world.WorldRunner;
 import com.cleanroommc.kirino.engine.world.event.ModuleInstallerRegistrationEvent;
@@ -118,6 +119,7 @@ public class KirinoEngine {
         ResourceSlot<GizmosManager> gizmosManager = resourceLayout.slot(GizmosManager.class);
         ResourceSlot<VAO> fullscreenTriangleVao = resourceLayout.slot(VAO.class);
         ResourceSlot<ShaderRegistry> shaderRegistry = resourceLayout.slot(ShaderRegistry.class);
+        ResourceSlot<KnowledgeRuntime> glKnowledge = resourceLayout.slot(KnowledgeRuntime.class);
         ResourceSlot<FrameFinalizer> frameFinalizer = resourceLayout.slot(FrameFinalizer.class);
         ResourceSlot<VAO> dummyVao = resourceLayout.slot(VAO.class);
         ResourceSlot<MeshletGpuRegistry> meshletGpuRegistry = resourceLayout.slot(MeshletGpuRegistry.class);
@@ -152,7 +154,8 @@ public class KirinoEngine {
                 graphicResourceManager,
                 gizmosManager,
                 debugHudManager,
-                shaderRegistry);
+                shaderRegistry,
+                glKnowledge);
 
         MinecraftCamera camera = new MinecraftCamera();
 

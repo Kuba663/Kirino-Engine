@@ -8,6 +8,7 @@ import com.cleanroommc.kirino.engine.render.core.resource.GraphicResourceManager
 import com.cleanroommc.kirino.engine.render.core.shader.ShaderRegistry;
 import com.cleanroommc.kirino.engine.render.core.staging.StagingBufferManager;
 import com.cleanroommc.kirino.engine.resource.ResourceSlot;
+import com.cleanroommc.kirino.engine.semantic.KnowledgeRuntime;
 
 public class GraphicsRuntimeServices {
     public final ResourceSlot<GLStateBackup> stateBackup;
@@ -17,6 +18,7 @@ public class GraphicsRuntimeServices {
     public final ResourceSlot<GizmosManager> gizmosManager;
     public final ResourceSlot<InGameDebugHUDManager> debugHudManager;
     public final ResourceSlot<ShaderRegistry> shaderRegistry;
+    public final ResourceSlot<KnowledgeRuntime> glKnowledge;
 
     public GraphicsRuntimeServices(
             ResourceSlot<GLStateBackup> stateBackup,
@@ -25,7 +27,8 @@ public class GraphicsRuntimeServices {
             ResourceSlot<GraphicResourceManager> graphicResourceManager,
             ResourceSlot<GizmosManager> gizmosManager,
             ResourceSlot<InGameDebugHUDManager> debugHudManager,
-            ResourceSlot<ShaderRegistry> shaderRegistry) {
+            ResourceSlot<ShaderRegistry> shaderRegistry,
+            ResourceSlot<KnowledgeRuntime> glKnowledge) {
 
         this.stateBackup = stateBackup;
         this.renderer = renderer;
@@ -34,5 +37,6 @@ public class GraphicsRuntimeServices {
         this.gizmosManager = gizmosManager;
         this.debugHudManager = debugHudManager;
         this.shaderRegistry = shaderRegistry;
+        this.glKnowledge = glKnowledge;
     }
 }

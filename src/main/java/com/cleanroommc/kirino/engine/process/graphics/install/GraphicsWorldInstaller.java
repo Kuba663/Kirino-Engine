@@ -6,6 +6,7 @@ import com.cleanroommc.kirino.engine.FramePhaseTiming;
 import com.cleanroommc.kirino.engine.render.core.debug.gizmos.GizmosManager;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.ImmediateHUD;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.InGameDebugHUDManager;
+import com.cleanroommc.kirino.engine.render.core.gl.semantic.GLViolationPolicy;
 import com.cleanroommc.kirino.engine.render.core.shader.compile.ShaderCompileOptions;
 import com.cleanroommc.kirino.engine.render.usage.minecraft.patch.MinecraftCulling;
 import com.cleanroommc.kirino.engine.render.usage.minecraft.patch.MinecraftEntityRendering;
@@ -23,6 +24,9 @@ import com.cleanroommc.kirino.engine.render.core.shader.ShaderRegistry;
 import com.cleanroommc.kirino.engine.render.core.staging.StagingBufferManager;
 import com.cleanroommc.kirino.engine.resource.ResourceLayout;
 import com.cleanroommc.kirino.engine.resource.ResourceStorage;
+import com.cleanroommc.kirino.engine.semantic.KnowledgeOwner;
+import com.cleanroommc.kirino.engine.semantic.KnowledgeRuntime;
+import com.cleanroommc.kirino.engine.semantic.KnowledgeSupervisor;
 import com.cleanroommc.kirino.engine.world.ModuleInstaller;
 import com.cleanroommc.kirino.engine.world.context.GraphicsWorldView;
 import com.cleanroommc.kirino.engine.world.context.WorldContext;
@@ -179,6 +183,9 @@ public class GraphicsWorldInstaller implements ModuleInstaller<Graphics> {
                 context.shaderIntrospection().glslRegistry,
                 context.shaderIntrospection().defaultShaderAnalyzer);
 
+        KnowledgeSupervisor supervisor = new KnowledgeSupervisor(new GLViolationPolicy());
+        KnowledgeRuntime glKnowledge = supervisor.access(KnowledgeOwner.of("gl"));
+
         storage.put(context.graphicsRuntimeServices().stateBackup, stateBackup);
         storage.put(context.graphicsRuntimeServices().renderer, renderer);
         storage.put(context.graphicsRuntimeServices().stagingBufferManager, stagingBufferManager);
@@ -186,6 +193,7 @@ public class GraphicsWorldInstaller implements ModuleInstaller<Graphics> {
         storage.put(context.graphicsRuntimeServices().gizmosManager, gizmosManager);
         storage.put(context.graphicsRuntimeServices().debugHudManager, debugHudManager);
         storage.put(context.graphicsRuntimeServices().shaderRegistry, shaderRegistry);
+        storage.put(context.graphicsRuntimeServices().glKnowledge, glKnowledge);
 
         storage.sealResource(context.graphicsRuntimeServices().stateBackup);
         storage.sealResource(context.graphicsRuntimeServices().renderer);
@@ -194,6 +202,7 @@ public class GraphicsWorldInstaller implements ModuleInstaller<Graphics> {
         storage.sealResource(context.graphicsRuntimeServices().gizmosManager);
         storage.sealResource(context.graphicsRuntimeServices().debugHudManager);
         storage.sealResource(context.graphicsRuntimeServices().shaderRegistry);
+        storage.sealResource(context.graphicsRuntimeServices().glKnowledge);
     }
 
     private void initMinecraftIntegration(GraphicsWorldView context) {
