@@ -9,9 +9,8 @@ import com.cleanroommc.kirino.engine.render.core.pipeline.GLStateBackup;
 import com.cleanroommc.kirino.engine.render.core.pipeline.draw.cmd.HighLevelDC;
 import com.cleanroommc.kirino.engine.render.core.pipeline.draw.cmd.LowLevelDC;
 import com.cleanroommc.kirino.engine.render.core.pipeline.post.FrameFinalizer;
-import com.cleanroommc.kirino.engine.render.usage.MinecraftAssetProviders;
-import com.cleanroommc.kirino.engine.render.usage.MinecraftIntegration;
-import com.cleanroommc.kirino.engine.render.usage.SceneViewState;
+import com.cleanroommc.kirino.engine.render.usage.McIntegrationBundle;
+import com.cleanroommc.kirino.engine.render.usage.McSceneViewState;
 import com.cleanroommc.kirino.engine.resource.ResourceStorage;
 import com.cleanroommc.kirino.engine.world.context.GraphicsWorldView;
 import com.cleanroommc.kirino.engine.world.context.WorldContext;
@@ -33,17 +32,17 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class GraphicsWorldViewImpl implements GraphicsWorldView {
+
     private final CleanECSRuntime ecs;
     private final RenderStructure render;
     private final RenderExtensions extensions;
     private final EventBus eventBus;
     private final Logger logger;
     private final ResourceStorage storage;
-    private final BootstrapResources bootstrapResources;
-    private final GraphicsRuntimeServices graphicsRuntimeServices;
-    private final MinecraftIntegration minecraftIntegration;
-    private final MinecraftAssetProviders minecraftAssetProviders;
-    private final SceneViewState sceneViewState;
+    private final BuiltinShaderBundle builtinShaderBundle;
+    private final GraphicsRuntimeBundle graphicsRuntimeBundle;
+    private final McIntegrationBundle mcIntegrationBundle;
+    private final McSceneViewState mcSceneViewState;
     private final ShaderIntrospection shaderIntrospection;
 
     private final Map<FramePhase,
@@ -51,29 +50,40 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
             new Object2ObjectOpenHashMap<>();
 
     public GraphicsWorldViewImpl(
-            CleanECSRuntime ecs,
-            RenderStructure render,
-            RenderExtensions extensions,
-            EventBus eventBus,
-            Logger logger,
-            ResourceStorage storage,
-            BootstrapResources bootstrapResources,
-            GraphicsRuntimeServices graphicsRuntimeServices,
-            MinecraftIntegration minecraftIntegration,
-            MinecraftAssetProviders minecraftAssetProviders,
-            SceneViewState sceneViewState,
-            ShaderIntrospection shaderIntrospection) {
+            @NonNull CleanECSRuntime ecs,
+            @NonNull RenderStructure render,
+            @NonNull RenderExtensions extensions,
+            @NonNull EventBus eventBus,
+            @NonNull Logger logger,
+            @NonNull ResourceStorage storage,
+            @NonNull BuiltinShaderBundle builtinShaderBundle,
+            @NonNull GraphicsRuntimeBundle graphicsRuntimeBundle,
+            @NonNull McIntegrationBundle mcIntegrationBundle,
+            @NonNull McSceneViewState mcSceneViewState,
+            @NonNull ShaderIntrospection shaderIntrospection) {
+
+        Preconditions.checkNotNull(ecs);
+        Preconditions.checkNotNull(render);
+        Preconditions.checkNotNull(extensions);
+        Preconditions.checkNotNull(eventBus);
+        Preconditions.checkNotNull(logger);
+        Preconditions.checkNotNull(storage);
+        Preconditions.checkNotNull(builtinShaderBundle);
+        Preconditions.checkNotNull(graphicsRuntimeBundle);
+        Preconditions.checkNotNull(mcIntegrationBundle);
+        Preconditions.checkNotNull(mcSceneViewState);
+        Preconditions.checkNotNull(shaderIntrospection);
+
         this.ecs = ecs;
         this.render = render;
         this.extensions = extensions;
         this.eventBus = eventBus;
         this.logger = logger;
         this.storage = storage;
-        this.bootstrapResources = bootstrapResources;
-        this.graphicsRuntimeServices = graphicsRuntimeServices;
-        this.minecraftIntegration = minecraftIntegration;
-        this.minecraftAssetProviders = minecraftAssetProviders;
-        this.sceneViewState = sceneViewState;
+        this.builtinShaderBundle = builtinShaderBundle;
+        this.graphicsRuntimeBundle = graphicsRuntimeBundle;
+        this.mcIntegrationBundle = mcIntegrationBundle;
+        this.mcSceneViewState = mcSceneViewState;
         this.shaderIntrospection = shaderIntrospection;
     }
 
@@ -115,38 +125,32 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
 
     @NonNull
     @Override
-    public ShaderIntrospection shaderIntrospection() {
+    public ShaderIntrospection shaderi() {
         return shaderIntrospection;
     }
 
     @NonNull
     @Override
-    public BootstrapResources bootstrapResources() {
-        return bootstrapResources;
+    public BuiltinShaderBundle shaderb() {
+        return builtinShaderBundle;
     }
 
     @NonNull
     @Override
-    public GraphicsRuntimeServices graphicsRuntimeServices() {
-        return graphicsRuntimeServices;
+    public GraphicsRuntimeBundle graphicsb() {
+        return graphicsRuntimeBundle;
     }
 
     @NonNull
     @Override
-    public MinecraftIntegration minecraftIntegration() {
-        return minecraftIntegration;
+    public McIntegrationBundle mcib() {
+        return mcIntegrationBundle;
     }
 
     @NonNull
     @Override
-    public MinecraftAssetProviders minecraftAssetProviders() {
-        return minecraftAssetProviders;
-    }
-
-    @NonNull
-    @Override
-    public SceneViewState sceneViewState() {
-        return sceneViewState;
+    public McSceneViewState mcscene() {
+        return mcSceneViewState;
     }
 
     @Override
@@ -163,13 +167,8 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
 
         switch (phase) {
             case PRE_UPDATE -> {
-                // only read states once to prevent huge amount of pipeline stalls
-                GLStateBackup stateBackup = storage.get(graphicsRuntimeServices.stateBackup);
-                if (!stateBackup.isStored()) {
-                    stateBackup.storeStates();
-                }
 
-                FrameFinalizer frameFinalizer = storage.get(bootstrapResources.frameFinalizer);
+                FrameFinalizer frameFinalizer = storage.get(graphicsRuntimeBundle.frameFinalizer);
                 frameFinalizer.updateResolution();
 
                 // current render target: main framebuffer
@@ -177,21 +176,18 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_STENCIL_BUFFER_BIT);
             }
             case UPDATE -> {
-                storage.get(graphicsRuntimeServices.graphicResourceManager).runStaging();
-                sceneViewState.scene.tryUpdateWorld(Minecraft.getMinecraft().world);
-                sceneViewState.scene.update();
+                storage.get(graphicsRuntimeBundle.graphicResourceManager).runStaging();
+                mcSceneViewState.scene.tryUpdateWorld(Minecraft.getMinecraft().world);
+                mcSceneViewState.scene.update();
             }
             case POST_UPDATE -> {
-                GLStateBackup stateBackup = storage.get(graphicsRuntimeServices.stateBackup);
-                FrameFinalizer frameFinalizer = storage.get(bootstrapResources.frameFinalizer);
+                FrameFinalizer frameFinalizer = storage.get(graphicsRuntimeBundle.frameFinalizer);
 
                 frameFinalizer.finalizeFramebuffer(storage);
 
                 // current render target: minecraft framebuffer
                 frameFinalizer.bindMinecraftFramebuffer(true);
 
-                // reset everything to prevent any unexpected behavior
-                stateBackup.restoreStates();
                 GL30.glBindVertexArray(0);
                 GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
                 GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -231,7 +227,7 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
                 glStateBackup.storeStates();
                 int vbo = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
 
-                rs().gizmosPass.render(storage, sceneViewState.camera);
+                rs().gizmosPassDesc.acquire().render(storage, mcSceneViewState.camera);
 
                 glStateBackup.restoreStates();
                 GL30.glBindVertexArray(0);
@@ -239,7 +235,7 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
                 GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
             }
             case RENDER_OVERLAY -> {
-                InGameDebugHUDManager debugHudManager = storage.get(graphicsRuntimeServices.debugHudManager);
+                InGameDebugHUDManager debugHudManager = storage.get(graphicsRuntimeBundle.debugHudManager);
                 debugHudManager.updateAndRenderIfNeeded();
             }
         }

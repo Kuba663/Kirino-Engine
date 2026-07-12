@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class AnalyticalWorldViewImpl implements AnalyticalWorldView {
+
     private final CleanECSRuntime ecs;
     private final RenderStructure render;
     private final RenderExtensions extensions;
@@ -33,12 +34,20 @@ public class AnalyticalWorldViewImpl implements AnalyticalWorldView {
             new Object2ObjectOpenHashMap<>();
 
     public AnalyticalWorldViewImpl(
-            CleanECSRuntime ecs,
-            RenderStructure render,
-            RenderExtensions extensions,
-            EventBus eventBus,
-            Logger logger,
-            ShaderIntrospection shaderIntrospection) {
+            @NonNull CleanECSRuntime ecs,
+            @NonNull RenderStructure render,
+            @NonNull RenderExtensions extensions,
+            @NonNull EventBus eventBus,
+            @NonNull Logger logger,
+            @NonNull ShaderIntrospection shaderIntrospection) {
+
+        Preconditions.checkNotNull(ecs);
+        Preconditions.checkNotNull(render);
+        Preconditions.checkNotNull(extensions);
+        Preconditions.checkNotNull(eventBus);
+        Preconditions.checkNotNull(logger);
+        Preconditions.checkNotNull(shaderIntrospection);
+
         this.ecs = ecs;
         this.render = render;
         this.extensions = extensions;
@@ -79,7 +88,7 @@ public class AnalyticalWorldViewImpl implements AnalyticalWorldView {
 
     @NonNull
     @Override
-    public ShaderIntrospection shaderIntrospection() {
+    public ShaderIntrospection shaderi() {
         return shaderIntrospection;
     }
 

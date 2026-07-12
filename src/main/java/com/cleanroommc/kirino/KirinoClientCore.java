@@ -13,9 +13,8 @@ import com.cleanroommc.kirino.engine.render.core.debug.hud.event.DebugHUDRegistr
 import com.cleanroommc.kirino.engine.render.core.debug.hud.builtin.CommonStatsHUD;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.builtin.FpsHUD;
 import com.cleanroommc.kirino.engine.render.core.debug.shader.ShaderDebugResource;
-import com.cleanroommc.kirino.engine.render.usage.MinecraftAssetProviders;
-import com.cleanroommc.kirino.engine.render.usage.MinecraftIntegration;
-import com.cleanroommc.kirino.engine.render.usage.SceneViewState;
+import com.cleanroommc.kirino.engine.render.usage.McIntegrationBundle;
+import com.cleanroommc.kirino.engine.render.usage.McSceneViewState;
 import com.cleanroommc.kirino.engine.render.usage.debug.data.MeshletGpuTimeline;
 import com.cleanroommc.kirino.engine.render.usage.debug.hud.FreeTypeDebugHUD;
 import com.cleanroommc.kirino.engine.render.usage.debug.hud.MeshletGpuTimelineHUD;
@@ -124,7 +123,7 @@ public final class KirinoClientCore {
             return;
         }
 
-        MethodHolder2.getSceneViewState(KIRINO_ENGINE).scene.notifyBlockUpdate(x, y, z, oldState, newState);
+        MethodHolder2.getMcSceneViewState(KIRINO_ENGINE).scene.notifyBlockUpdate(x, y, z, oldState, newState);
     }
 
     /**
@@ -155,7 +154,7 @@ public final class KirinoClientCore {
             return;
         }
 
-        MethodHolder2.getSceneViewState(KIRINO_ENGINE).scene.notifyLightUpdate(x, y, z);
+        MethodHolder2.getMcSceneViewState(KIRINO_ENGINE).scene.notifyLightUpdate(x, y, z);
     }
 
     /**
@@ -215,9 +214,9 @@ public final class KirinoClientCore {
         KIRINO_ENGINE.run(FramePhase.PRE_UPDATE);
 
         //<editor-fold desc="vanilla logic">
-        MethodHolder2.getSceneViewState(KIRINO_ENGINE).camera.getProjectionBuffer().clear();
-        MethodHolder2.getSceneViewState(KIRINO_ENGINE).camera.getViewRotationBuffer().clear();
-        float partialTicks = (float) MethodHolder2.getSceneViewState(KIRINO_ENGINE).camera.getPartialTicks();
+        MethodHolder2.getMcSceneViewState(KIRINO_ENGINE).camera.getProjectionBuffer().clear();
+        MethodHolder2.getMcSceneViewState(KIRINO_ENGINE).camera.getViewRotationBuffer().clear();
+        float partialTicks = (float) MethodHolder2.getMcSceneViewState(KIRINO_ENGINE).camera.getPartialTicks();
         MethodHolder1.updateLightmap(MC.MINECRAFT.entityRenderer, partialTicks);
         if (MC.MINECRAFT.getRenderViewEntity() == null) {
             MC.MINECRAFT.setRenderViewEntity(Minecraft.getMinecraft().player);
@@ -284,7 +283,7 @@ public final class KirinoClientCore {
         KIRINO_ENGINE.run(FramePhase.RENDER_OPAQUE);
 
         //<editor-fold desc="vanilla logic">
-        KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMinecraftIntegration(KIRINO_ENGINE).cullingPatch).collectEntitiesInView(
+        KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMcIntegrationBundle(KIRINO_ENGINE).cullingPatch).collectEntitiesInView(
                 renderViewEntity,
                 cameraFrustum,
                 MC.MINECRAFT.world.getChunkProvider(),
@@ -303,7 +302,7 @@ public final class KirinoClientCore {
             GlStateManager.pushMatrix();
             RenderHelper.enableStandardItemLighting();
             ForgeHooksClient.setRenderPass(0);
-            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMinecraftIntegration(KIRINO_ENGINE).entityRenderingPatch).renderEntities(
+            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMcIntegrationBundle(KIRINO_ENGINE).entityRenderingPatch).renderEntities(
                     MC.MINECRAFT.getRenderViewEntity(),
                     MC.MINECRAFT.pointedEntity,
                     MC.MINECRAFT.player,
@@ -315,7 +314,7 @@ public final class KirinoClientCore {
                     MC.MINECRAFT.entityRenderer,
                     partialTicks,
                     MinecraftForgeClient.getRenderPass());
-            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMinecraftIntegration(KIRINO_ENGINE).tesrRenderingPatch).renderTESRs(
+            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMcIntegrationBundle(KIRINO_ENGINE).tesrRenderingPatch).renderTESRs(
                     MC.MINECRAFT.getRenderViewEntity(),
                     cameraFrustum,
                     MC.MINECRAFT.world,
@@ -405,7 +404,7 @@ public final class KirinoClientCore {
         if (!MethodHolder1.isDebugView(MC.MINECRAFT.entityRenderer)) {
             RenderHelper.enableStandardItemLighting();
             ForgeHooksClient.setRenderPass(1);
-            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMinecraftIntegration(KIRINO_ENGINE).entityRenderingPatch).renderEntities(
+            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMcIntegrationBundle(KIRINO_ENGINE).entityRenderingPatch).renderEntities(
                     MC.MINECRAFT.getRenderViewEntity(),
                     MC.MINECRAFT.pointedEntity,
                     MC.MINECRAFT.player,
@@ -417,7 +416,7 @@ public final class KirinoClientCore {
                     MC.MINECRAFT.entityRenderer,
                     partialTicks,
                     MinecraftForgeClient.getRenderPass());
-            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMinecraftIntegration(KIRINO_ENGINE).tesrRenderingPatch).renderTESRs(
+            KirinoCommonCore.KIRINO_ENGINE.getStorage().get(MethodHolder2.getMcIntegrationBundle(KIRINO_ENGINE).tesrRenderingPatch).renderTESRs(
                     MC.MINECRAFT.getRenderViewEntity(),
                     cameraFrustum,
                     MC.MINECRAFT.world,
@@ -507,7 +506,7 @@ public final class KirinoClientCore {
         }
 
         // it's a bad pratice to access resources like that, but i'd like to make an exception for debug services
-        DEBUG_SERVICE.register(RenderStatsFrame.class, new RenderStatsFrame(MethodHolder2.getGraphicsRuntimeServices(KIRINO_ENGINE).debugHudManager));
+        DEBUG_SERVICE.register(RenderStatsFrame.class, new RenderStatsFrame(MethodHolder2.getGraphicsRuntimeBundle(KIRINO_ENGINE).debugHudManager));
         DEBUG_SERVICE.register(FpsHistory.class, new FpsHistory());
         DEBUG_SERVICE.register(MeshletGpuTimeline.class, new MeshletGpuTimeline());
     }
@@ -780,69 +779,57 @@ public final class KirinoClientCore {
 
         static {
             DELEGATE = new KirinoEngineDelegate(
-                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "bootstrapResources", BootstrapResources.class),
-                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "graphicsRuntimeServices", GraphicsRuntimeServices.class),
-                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "sceneViewState", SceneViewState.class),
-                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "minecraftIntegration", MinecraftIntegration.class),
-                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "minecraftAssetProviders", MinecraftAssetProviders.class),
+                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "builtinShaderBundle", BuiltinShaderBundle.class),
+                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "graphicsRuntimeBundle", GraphicsRuntimeBundle.class),
+                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "mcSceneViewState", McSceneViewState.class),
+                    ReflectionUtils.getFieldGetter(KirinoEngine.class, "mcIntegrationBundle", McIntegrationBundle.class),
                     ReflectionUtils.getFieldGetter(KirinoEngine.class, "shaderIntrospection", ShaderIntrospection.class),
                     ReflectionUtils.getFieldGetter(KirinoEngine.class, "renderStructure", RenderStructure.class),
                     ReflectionUtils.getFieldGetter(KirinoEngine.class, "renderExtensions", RenderExtensions.class));
 
-            Preconditions.checkNotNull(DELEGATE.bootstrapResourcesGetter);
-            Preconditions.checkNotNull(DELEGATE.graphicsRuntimeServicesGetter);
-            Preconditions.checkNotNull(DELEGATE.sceneViewStateGetter);
-            Preconditions.checkNotNull(DELEGATE.minecraftIntegrationGetter);
-            Preconditions.checkNotNull(DELEGATE.minecraftAssetProvidersGetter);
+            Preconditions.checkNotNull(DELEGATE.builtinShaderBundleGetter);
+            Preconditions.checkNotNull(DELEGATE.graphicsRuntimeBundleGetter);
+            Preconditions.checkNotNull(DELEGATE.mcSceneViewStateGetter);
+            Preconditions.checkNotNull(DELEGATE.mcIntegrationBundleGetter);
             Preconditions.checkNotNull(DELEGATE.shaderIntrospectionGetter);
             Preconditions.checkNotNull(DELEGATE.renderStructureGetter);
             Preconditions.checkNotNull(DELEGATE.renderExtensionsGetter);
         }
 
-        static BootstrapResources getBootstrapResources(KirinoEngine engine) {
-            BootstrapResources result;
+        static BuiltinShaderBundle getBuiltinShaderBundle(KirinoEngine engine) {
+            BuiltinShaderBundle result;
             try {
-                result = (BootstrapResources) DELEGATE.bootstrapResourcesGetter.invokeExact(engine);
+                result = (BuiltinShaderBundle) DELEGATE.builtinShaderBundleGetter.invokeExact(engine);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
             return result;
         }
 
-        static GraphicsRuntimeServices getGraphicsRuntimeServices(KirinoEngine engine) {
-            GraphicsRuntimeServices result;
+        static GraphicsRuntimeBundle getGraphicsRuntimeBundle(KirinoEngine engine) {
+            GraphicsRuntimeBundle result;
             try {
-                result = (GraphicsRuntimeServices) DELEGATE.graphicsRuntimeServicesGetter.invokeExact(engine);
+                result = (GraphicsRuntimeBundle) DELEGATE.graphicsRuntimeBundleGetter.invokeExact(engine);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
             return result;
         }
 
-        static SceneViewState getSceneViewState(KirinoEngine engine) {
-            SceneViewState result;
+        static McSceneViewState getMcSceneViewState(KirinoEngine engine) {
+            McSceneViewState result;
             try {
-                result = (SceneViewState) DELEGATE.sceneViewStateGetter.invokeExact(engine);
+                result = (McSceneViewState) DELEGATE.mcSceneViewStateGetter.invokeExact(engine);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
             return result;
         }
 
-        static MinecraftIntegration getMinecraftIntegration(KirinoEngine engine) {
-            MinecraftIntegration result;
+        static McIntegrationBundle getMcIntegrationBundle(KirinoEngine engine) {
+            McIntegrationBundle result;
             try {
-                result = (MinecraftIntegration) DELEGATE.minecraftIntegrationGetter.invokeExact(engine);
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-            return result;
-        }
-
-        static MinecraftAssetProviders getMinecraftAssetProviders(KirinoEngine engine) {
-            MinecraftAssetProviders result;
-            try {
-                result = (MinecraftAssetProviders) DELEGATE.minecraftAssetProvidersGetter.invokeExact(engine);
+                result = (McIntegrationBundle) DELEGATE.mcIntegrationBundleGetter.invokeExact(engine);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
@@ -883,11 +870,10 @@ public final class KirinoClientCore {
          * Holds handles for KirinoEngine private fields.
          */
         record KirinoEngineDelegate(
-                MethodHandle bootstrapResourcesGetter,
-                MethodHandle graphicsRuntimeServicesGetter,
-                MethodHandle sceneViewStateGetter,
-                MethodHandle minecraftIntegrationGetter,
-                MethodHandle minecraftAssetProvidersGetter,
+                MethodHandle builtinShaderBundleGetter,
+                MethodHandle graphicsRuntimeBundleGetter,
+                MethodHandle mcSceneViewStateGetter,
+                MethodHandle mcIntegrationBundleGetter,
                 MethodHandle shaderIntrospectionGetter,
                 MethodHandle renderStructureGetter,
                 MethodHandle renderExtensionsGetter) {

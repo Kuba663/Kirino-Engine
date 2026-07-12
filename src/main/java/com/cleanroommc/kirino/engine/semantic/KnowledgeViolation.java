@@ -49,7 +49,7 @@ public final class KnowledgeViolation {
 
     @Override
     public String toString() {
-        return String.format("Knowledge violation { kind=%s, key=%s, actual=%s, owner=%s }",
+        return String.format("KnowledgeViolation{ kind=%s, key=%s, actual=%s, owner=%s }",
                 kind.toString(),
                 key.toString(),
                 actual.toString(),
