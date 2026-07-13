@@ -168,7 +168,7 @@ public class KirinoEngine {
     private boolean afterFirstPrepare = false;
 
     /**
-     * This will be toggled on forever right after the second {@link #run(FramePhase)} or {@link #runHeadlessly(FramePhase)}.
+     * This will be toggled on forever during the second {@link #run(FramePhase)} or {@link #runHeadlessly(FramePhase)}.
      * This information is important because the first {@link FramePhase#PREPARE} run is executed during
      * the engine initialization instead of world ticking.
      */
