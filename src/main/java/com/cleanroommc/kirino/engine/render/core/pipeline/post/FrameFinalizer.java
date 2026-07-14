@@ -5,6 +5,7 @@ import com.cleanroommc.kirino.engine.render.core.framebuffer.PingPongFramebuffer
 import com.cleanroommc.kirino.engine.render.core.framebuffer.ResolutionContainer;
 import com.cleanroommc.kirino.engine.render.core.framebuffer.ScalableFramebuffer;
 import com.cleanroommc.kirino.engine.resource.ResourceStorage;
+import com.cleanroommc.kirino.engine.semantic.KnowledgeRuntime;
 import com.cleanroommc.kirino.gl.framebuffer.ColorAttachment;
 import com.cleanroommc.kirino.gl.framebuffer.DepthStencilAttachment;
 import com.cleanroommc.kirino.gl.framebuffer.Framebuffer;
@@ -22,6 +23,7 @@ import org.lwjgl.opengl.GL42;
 import org.lwjgl.opengl.GL43;
 
 public class FrameFinalizer {
+
     private static final Minecraft MINECRAFT = Minecraft.getMinecraft();
     private final Logger logger;
 
@@ -284,7 +286,10 @@ public class FrameFinalizer {
      *
      * <p><b>⚠ WARNING: Combinatorial logic here is over complicated but it works! Must not touch this method and its related resources unless necessary.</b></p>
      */
-    public void finalizeFramebuffer(@NonNull ResourceStorage storage) {
+    public void finalizeFramebuffer(
+            @NonNull ResourceStorage storage,
+            @NonNull KnowledgeRuntime glKnowledge) {
+
         //<editor-fold desc="blit depth to minecraft framebuffer">
         if (mainFramebuffer.getRatio() == 1f) {
             // just in case the size and format of main framebuffer and minecraft frambuffer mismatch
@@ -389,7 +394,7 @@ public class FrameFinalizer {
                 GL11.glViewport(0, 0, MINECRAFT.getFramebuffer().framebufferWidth, MINECRAFT.getFramebuffer().framebufferHeight);
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
                 GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
-                toneMappingPassDesc.acquire().render(storage, null, null, new Object[]{mainFramebuffer.framebuffer});
+                toneMappingPassDesc.acquire().render(storage, glKnowledge, null, null, new Object[]{mainFramebuffer.framebuffer});
             } else if (mainFramebuffer.getRatio() < 1f) {
                 // todo: upscale impl
                 GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFramebuffer.framebuffer.fboID);
@@ -405,7 +410,7 @@ public class FrameFinalizer {
                 Framebuffer.bind(MINECRAFT.getFramebuffer().framebufferObject);
                 GL11.glViewport(0, 0, MINECRAFT.getFramebuffer().framebufferWidth, MINECRAFT.getFramebuffer().framebufferHeight);
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-                toneMappingPassDesc.acquire().render(storage, null, null, new Object[]{intermediateFramebuffer});
+                toneMappingPassDesc.acquire().render(storage, glKnowledge, null, null, new Object[]{intermediateFramebuffer});
             } else if (mainFramebuffer.getRatio() > 1f) {
                 // todo: downscale impl
                 GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFramebuffer.framebuffer.fboID);
@@ -421,7 +426,7 @@ public class FrameFinalizer {
                 Framebuffer.bind(MINECRAFT.getFramebuffer().framebufferObject);
                 GL11.glViewport(0, 0, MINECRAFT.getFramebuffer().framebufferWidth, MINECRAFT.getFramebuffer().framebufferHeight);
                 GL11.glClear(GL11.GL_COLOR_BUFFER_BIT);
-                toneMappingPassDesc.acquire().render(storage, null, null, new Object[]{intermediateFramebuffer});
+                toneMappingPassDesc.acquire().render(storage, glKnowledge, null, null, new Object[]{intermediateFramebuffer});
             }
         }
         //</editor-fold>
@@ -445,7 +450,7 @@ public class FrameFinalizer {
                             1);
                     GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
 
-                    postProcessingPass.postProcess(storage, true);
+                    postProcessingPass.postProcess(storage, glKnowledge, true);
                 } else if (postProcessingPass.getSubpassCount() >= 2) {
                     ColorAttachment colorAttachmentSrc = ((ColorAttachment) mainFramebuffer.framebuffer.getColorAttachment(0));
                     ColorAttachment colorAttachmentDest = ((ColorAttachment) pingPongFramebuffer.framebufferA().getColorAttachment(0));
@@ -461,7 +466,7 @@ public class FrameFinalizer {
                             1);
                     GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
 
-                    postProcessingPass.postProcess(storage);
+                    postProcessingPass.postProcess(storage, glKnowledge);
                 }
             } else if (mainFramebuffer.getRatio() < 1f) {
                 if (postProcessingPass.getSubpassCount() == 1) {
@@ -476,7 +481,7 @@ public class FrameFinalizer {
                             GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
                     GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
 
-                    postProcessingPass.postProcess(storage, true);
+                    postProcessingPass.postProcess(storage, glKnowledge, true);
                 } else if (postProcessingPass.getSubpassCount() >= 2) {
                     // todo: upscale impl
                     GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFramebuffer.framebuffer.fboID);
@@ -489,7 +494,7 @@ public class FrameFinalizer {
                             GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
                     GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
 
-                    postProcessingPass.postProcess(storage);
+                    postProcessingPass.postProcess(storage, glKnowledge);
                 }
             } else if (mainFramebuffer.getRatio() > 1f) {
                 if (postProcessingPass.getSubpassCount() == 1) {
@@ -504,7 +509,7 @@ public class FrameFinalizer {
                             GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
                     GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
 
-                    postProcessingPass.postProcess(storage, true);
+                    postProcessingPass.postProcess(storage, glKnowledge, true);
                 } else if (postProcessingPass.getSubpassCount() >= 2) {
                     // todo: downscale impl
                     GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFramebuffer.framebuffer.fboID);
@@ -517,7 +522,7 @@ public class FrameFinalizer {
                             GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
                     GL42.glMemoryBarrier(GL42.GL_TEXTURE_FETCH_BARRIER_BIT | GL42.GL_FRAMEBUFFER_BARRIER_BIT);
 
-                    postProcessingPass.postProcess(storage);
+                    postProcessingPass.postProcess(storage, glKnowledge);
                 }
             }
         }

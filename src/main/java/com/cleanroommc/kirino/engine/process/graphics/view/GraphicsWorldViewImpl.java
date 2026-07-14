@@ -5,6 +5,7 @@ import com.cleanroommc.kirino.engine.FramePhase;
 import com.cleanroommc.kirino.engine.FramePhaseTiming;
 import com.cleanroommc.kirino.engine.render.core.*;
 import com.cleanroommc.kirino.engine.render.core.debug.hud.InGameDebugHUDManager;
+import com.cleanroommc.kirino.engine.render.core.gl.semantic.GLKnowledgeKeys;
 import com.cleanroommc.kirino.engine.render.core.pipeline.draw.cmd.HighLevelDC;
 import com.cleanroommc.kirino.engine.render.core.pipeline.draw.cmd.LowLevelDC;
 import com.cleanroommc.kirino.engine.render.core.pipeline.post.FrameFinalizer;
@@ -222,7 +223,7 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
     //</editor-fold>
 
-    private static void resetBindings() {
+    private static void resetCommonBindings() {
         GL20.glUseProgram(0);
         GL30.glBindVertexArray(0);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
@@ -232,7 +233,7 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
 
     //<editor-fold desc="enter phase">
     private void enterPreUpdate(KnowledgeRuntime glKnowledge) {
-        FrameFinalizer frameFinalizer = storage.get(graphicsRuntimeBundle.frameFinalizer);
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
         frameFinalizer.updateResolution();
 
         // current render target: main framebuffer
@@ -245,40 +246,126 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
         GL11.glStencilMask(0xFF);
         GL11.glClearStencil(0);
         GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT | GL11.GL_STENCIL_BUFFER_BIT);
+
+        resetCommonBindings();
+
+        glKnowledge.commit(cp -> {
+            cp.know(GLKnowledgeKeys.FBO_DRAW, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.FBO_READ, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.COLOR_MASK_R, true);
+            cp.know(GLKnowledgeKeys.COLOR_MASK_G, true);
+            cp.know(GLKnowledgeKeys.COLOR_MASK_B, true);
+            cp.know(GLKnowledgeKeys.COLOR_MASK_A, true);
+            cp.know(GLKnowledgeKeys.DEPTH_MASK, true);
+            cp.know(GLKnowledgeKeys.SHADER_PROGRAM, 0);
+            cp.know(GLKnowledgeKeys.VAO, 0);
+            cp.know(GLKnowledgeKeys.VBO, 0);
+            cp.know(GLKnowledgeKeys.EBO, 0);
+            cp.know(GLKnowledgeKeys.IDB, 0);
+        });
     }
 
     private void enterUpdate(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
+        frameFinalizer.bindMainFramebuffer(true);
+
+        resetCommonBindings();
+
+        glKnowledge.commit(cp -> {
+            cp.know(GLKnowledgeKeys.FBO_DRAW, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.FBO_READ, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.SHADER_PROGRAM, 0);
+            cp.know(GLKnowledgeKeys.VAO, 0);
+            cp.know(GLKnowledgeKeys.VBO, 0);
+            cp.know(GLKnowledgeKeys.EBO, 0);
+            cp.know(GLKnowledgeKeys.IDB, 0);
+        });
     }
 
     private void enterRenderOpaque(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
+        frameFinalizer.bindMainFramebuffer(true);
+
+        resetCommonBindings();
+
+        glKnowledge.commit(cp -> {
+            cp.know(GLKnowledgeKeys.FBO_DRAW, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.FBO_READ, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.SHADER_PROGRAM, 0);
+            cp.know(GLKnowledgeKeys.VAO, 0);
+            cp.know(GLKnowledgeKeys.VBO, 0);
+            cp.know(GLKnowledgeKeys.EBO, 0);
+            cp.know(GLKnowledgeKeys.IDB, 0);
+        });
     }
 
     private void enterRenderTransparent(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
+        frameFinalizer.bindMainFramebuffer(true);
+
+        resetCommonBindings();
+
+        glKnowledge.commit(cp -> {
+            cp.know(GLKnowledgeKeys.FBO_DRAW, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.FBO_READ, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.SHADER_PROGRAM, 0);
+            cp.know(GLKnowledgeKeys.VAO, 0);
+            cp.know(GLKnowledgeKeys.VBO, 0);
+            cp.know(GLKnowledgeKeys.EBO, 0);
+            cp.know(GLKnowledgeKeys.IDB, 0);
+        });
     }
 
     private void enterPostUpdate(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
+        frameFinalizer.bindMainFramebuffer(true);
+
+        resetCommonBindings();
+
+        glKnowledge.commit(cp -> {
+            cp.know(GLKnowledgeKeys.FBO_DRAW, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.FBO_READ, frameFinalizer.getMainFramebuffer().framebuffer.fboID);
+            cp.know(GLKnowledgeKeys.SHADER_PROGRAM, 0);
+            cp.know(GLKnowledgeKeys.VAO, 0);
+            cp.know(GLKnowledgeKeys.VBO, 0);
+            cp.know(GLKnowledgeKeys.EBO, 0);
+            cp.know(GLKnowledgeKeys.IDB, 0);
+        });
     }
 
     private void enterRenderOverlay(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
+        frameFinalizer.bindMinecraftFramebuffer(true);
+
+        resetCommonBindings();
+
+        glKnowledge.commit(cp -> {
+            cp.know(GLKnowledgeKeys.FBO_DRAW, frameFinalizer.getMinecraftFramebuffer().framebufferObject);
+            cp.know(GLKnowledgeKeys.FBO_READ, frameFinalizer.getMinecraftFramebuffer().framebufferObject);
+            cp.know(GLKnowledgeKeys.SHADER_PROGRAM, 0);
+            cp.know(GLKnowledgeKeys.VAO, 0);
+            cp.know(GLKnowledgeKeys.VBO, 0);
+            cp.know(GLKnowledgeKeys.EBO, 0);
+            cp.know(GLKnowledgeKeys.IDB, 0);
+        });
     }
     //</editor-fold>
 
     //<editor-fold desc="exit phase">
     private void exitPreUpdate(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        glKnowledge.commit(cp -> cp.unknownDomain("gl"));
     }
 
     private void exitUpdate(KnowledgeRuntime glKnowledge) {
-        // NO OP
+        glKnowledge.commit(cp -> cp.unknownDomain("gl"));
     }
 
     private void exitRenderOpaque(KnowledgeRuntime glKnowledge) {
-        resetBindings();
+        glKnowledge.commit(cp -> cp.unknownDomain("gl"));
+
+        // for compatibility purpose only:
+        // apply hardcoded states to restore a Minecraft baseline
+        resetCommonBindings();
         GL11.glDisable(GL11.GL_BLEND);
         GL14.glBlendEquation(GL14.GL_FUNC_ADD);
         GL14.glBlendFuncSeparate(
@@ -298,7 +385,11 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
 
     private void exitRenderTransparent(KnowledgeRuntime glKnowledge) {
-        resetBindings();
+        glKnowledge.commit(cp -> cp.unknownDomain("gl"));
+
+        // for compatibility purpose only:
+        // apply hardcoded states to restore a Minecraft baseline
+        resetCommonBindings();
         GL11.glEnable(GL11.GL_BLEND);
         GL20.glBlendEquationSeparate(
                 GL14.GL_FUNC_ADD,
@@ -320,7 +411,11 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
 
     private void exitPostUpdate(KnowledgeRuntime glKnowledge) {
-        resetBindings();
+        glKnowledge.commit(cp -> cp.unknownDomain("gl"));
+
+        // for compatibility purpose only:
+        // apply hardcoded states to restore a Minecraft baseline
+        resetCommonBindings();
         GL11.glColorMask(true, true, true, true);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
@@ -351,7 +446,11 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
 
     private void exitRenderOverlay(KnowledgeRuntime glKnowledge) {
-        resetBindings();
+        glKnowledge.commit(cp -> cp.unknownDomain("gl"));
+
+        // for compatibility purpose only:
+        // apply hardcoded states to restore a Minecraft baseline
+        resetCommonBindings();
         GL11.glColorMask(true, true, true, true);
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDepthMask(true);
@@ -377,9 +476,9 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
 
     private void update(KnowledgeRuntime glKnowledge) {
-        storage.get(graphicsRuntimeBundle.graphicResourceManager).runStaging();
-        mcSceneViewState.scene.tryUpdateWorld(Minecraft.getMinecraft().world);
-        mcSceneViewState.scene.update();
+        storage().get(graphicsb().graphicResourceManager).runStaging();
+        mcscene().scene.tryUpdateWorld(Minecraft.getMinecraft().world);
+        mcscene().scene.update();
     }
 
     private void renderOpaque(KnowledgeRuntime glKnowledge) {
@@ -394,13 +493,13 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
 
     private void renderTransparent(KnowledgeRuntime glKnowledge) {
-        rs().gizmosPassDesc.acquire().render(storage, mcSceneViewState.camera);
+        rs().gizmosPassDesc.acquire().render(storage(), glKnowledge, mcscene().camera);
     }
 
     private void postUpdate(KnowledgeRuntime glKnowledge) {
-        FrameFinalizer frameFinalizer = storage.get(graphicsRuntimeBundle.frameFinalizer);
+        FrameFinalizer frameFinalizer = storage().get(graphicsb().frameFinalizer);
 
-        frameFinalizer.finalizeFramebuffer(storage);
+        frameFinalizer.finalizeFramebuffer(storage(), glKnowledge);
 
         // current render target: minecraft framebuffer
         frameFinalizer.bindMinecraftFramebuffer(true);
@@ -410,7 +509,7 @@ public class GraphicsWorldViewImpl implements GraphicsWorldView {
     }
 
     private void renderOverlay(KnowledgeRuntime glKnowledge) {
-        InGameDebugHUDManager debugHudManager = storage.get(graphicsRuntimeBundle.debugHudManager);
+        InGameDebugHUDManager debugHudManager = storage().get(graphicsb().debugHudManager);
         debugHudManager.updateAndRenderIfNeeded(); // it will capture GL states and restore when enabled
     }
     //</editor-fold>

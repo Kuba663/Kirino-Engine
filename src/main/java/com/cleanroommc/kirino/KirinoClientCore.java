@@ -94,7 +94,7 @@ public final class KirinoClientCore {
     }
     //</editor-fold>
 
-    //<editor-fold desc="vanilla source related patches">
+    //<editor-fold desc="vanilla hooks">
     /**
      * Block update hook.
      *
@@ -156,7 +156,9 @@ public final class KirinoClientCore {
 
         MethodHolder2.getMcSceneViewState(KIRINO_ENGINE).scene.notifyLightUpdate(x, y, z);
     }
+    //</editor-fold>
 
+    //<editor-fold desc="vanilla render update replacement">
     /**
      * This method is an alternative of our {@link #EntityRenderer$renderWorld(long)}.
      * When the render delegate is disabled or the rendering is unsupported,
@@ -522,7 +524,7 @@ public final class KirinoClientCore {
         LOGGER.info("---------- Kirino Client-Side Post-Initialization ----------");
 
         //<editor-fold desc="kirino engine">
-        // guarantee ImmediateClientServices initialization if it was not initialized
+        // guarantees ImmediateClientServices initialization if it was not initialized
         ImmediateClientServices ignore = ImmediateClientServices.instance();
 
         LOGGER.info("Post-Initializing Kirino Engine.");

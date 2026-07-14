@@ -76,7 +76,7 @@ public class KirinoEngine {
      * Side-effect free. Resource allocation is deferred via {@link ResourceSlot} or say virtualized.
      * You can treat it like a compile-time safe late binding. This constructor doesn't even care
      * if the engine is in <code>Graphics</code> mode or <code>Headless</code> mode.
-     * To be more specific, everything can be safely initialized and depend on without the GL context.
+     * To be more specific, everything can be safely initialized and depended on without the GL context.
      */
     @SuppressWarnings("unchecked")
     private KirinoEngine(
